@@ -485,7 +485,7 @@
                     </div>
                     <div>
                         <label class="text-[10px] font-semibold text-slate-400 block mb-1" data-i18n="lblPnl">P&amp;L ($)</label>
-                        <input type="number" step="any" id="trade-pnl" placeholder="0.00" class="w-full bg-cardBg border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-limeAccent focus:outline-none">
+                        <input type="number" step="any" id="trade-pnl" placeholder="0.00" oninput="markManualPnl()" class="w-full bg-cardBg border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-limeAccent focus:outline-none">
                     </div>
                 </div>
 
@@ -743,6 +743,7 @@
         let selectedPreset = 'bybit';
         let trades = [];
         let userIdKey = 'ts_trades_guest';
+        let isManualPnlOverride = false;
 
         // Telegram WebApp Setup
         const tg = window.Telegram?.WebApp;
@@ -790,7 +791,7 @@
             if (localTrades) {
                 try { trades = JSON.parse(localTrades); } catch(e) { trades = []; }
             } else {
-                trades = []; // Clean state for new user
+                trades = []; 
             }
 
             updateDashboard();
@@ -911,7 +912,7 @@
             if (files.length > 0) processCSVFile(files[0]);
         }
 
-        // Universal CSV Parser Logic (Robust Line & Delimiter Parsing)
+        // Universal CSV Parser Logic
         function processCSVFile(file) {
             triggerHaptic('medium');
             const statusEl = document.getElementById('import-status');
@@ -945,7 +946,6 @@
                     statusEl.innerText = `Успішно імпортовано ${importedCount} нових угод!`;
                     triggerHaptic('success');
 
-                    // Automatically switch to trades log to see imported items
                     setTimeout(() => {
                         switchTab('trades');
                     }, 800);
@@ -963,7 +963,6 @@
             const lines = csvText.split(/\r\n|\n/).filter(line => line.trim().length > 0);
             if (lines.length < 2) return [];
 
-            // Detect delimiter (comma or semicolon or tab)
             const firstLine = lines[0];
             let delimiter = ',';
             if (firstLine.includes(';') && !firstLine.includes(',')) delimiter = ';';
@@ -1103,16 +1102,23 @@
                 btnShort.className = 'py-1 rounded text-xs font-bold transition-all bg-rose-600 text-white';
                 btnLong.className = 'py-1 rounded text-xs font-bold transition-all text-slate-400 hover:text-white';
             }
+            isManualPnlOverride = false;
             calculatePnL();
         }
 
+        function markManualPnl() {
+            isManualPnlOverride = true;
+        }
+
         function calculatePnL() {
+            if (isManualPnlOverride) return;
+
             const entry = parseFloat(document.getElementById('trade-entry').value) || 0;
             const exit = parseFloat(document.getElementById('trade-exit').value) || 0;
             const size = parseFloat(document.getElementById('trade-size').value) || 0;
             const dir = document.getElementById('trade-direction').value;
 
-            if (entry && exit && size && !document.getElementById('trade-pnl').value) {
+            if (entry > 0 && exit > 0 && size > 0) {
                 let pnl = dir === 'LONG' ? (exit - entry) * size : (entry - exit) * size;
                 document.getElementById('trade-pnl').value = pnl.toFixed(2);
             }
@@ -1155,6 +1161,7 @@
             const modal = document.getElementById('add-modal');
             const form = document.getElementById('trade-form');
             form.reset();
+            isManualPnlOverride = false;
 
             if (editTrade) {
                 document.getElementById('trade-id').value = editTrade.id;
@@ -1170,6 +1177,7 @@
                 document.getElementById('trade-emotion').value = editTrade.emotion;
                 document.getElementById('trade-date').value = editTrade.date;
                 document.getElementById('trade-notes').value = editTrade.notes || '';
+                isManualPnlOverride = true; // keep existing loaded pnl until fields change
             } else {
                 document.getElementById('trade-id').value = '';
                 setDirection('LONG');
@@ -1460,7 +1468,6 @@
         function renderAnalyticsCharts() {
             if (typeof Chart === 'undefined') return;
             
-            // Exchange PnL Chart
             const exCtx = document.getElementById('exchangeChart')?.getContext('2d');
             if (exCtx) {
                 const exData = {};
@@ -1493,7 +1500,6 @@
                 });
             }
 
-            // Strategy Winrate Chart
             const stratCtx = document.getElementById('strategyChart')?.getContext('2d');
             if (stratCtx) {
                 const stratData = {};
@@ -1529,7 +1535,6 @@
                 });
             }
 
-            // Emotion Analysis Chart
             const emoCtx = document.getElementById('emotionChart')?.getContext('2d');
             if (emoCtx) {
                 const emoData = {};
