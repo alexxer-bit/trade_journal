@@ -1,0 +1,1706 @@
+<!DOCTYPE html>
+<html lang="uk" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CSV Auto-Import & AI Trading Journal Mini App</title>
+    
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        limeAccent: '#ADFF2F',
+                        bgDark: '#3B444B',
+                        cardBg: '#2C3338',
+                        cardBgHover: '#333C42',
+                        borderAccent: 'rgba(173, 255, 47, 0.25)'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #2C3338;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ADFF2F;
+            border-radius: 9999px;
+        }
+        body {
+            background-color: #3B444B;
+            color: #F3F4F6;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+        .lime-border {
+            border: 1px solid rgba(173, 255, 47, 0.25);
+        }
+        .lime-glow {
+            box-shadow: 0 0 15px rgba(173, 255, 47, 0.15);
+        }
+        option {
+            background-color: #2C3338;
+            color: #F3F4F6;
+        }
+    </style>
+</head>
+<body class="bg-bgDark text-slate-100 min-h-screen flex flex-col justify-between pb-24 antialiased">
+
+    <header class="sticky top-0 z-30 bg-[#3B444B]/95 backdrop-blur-md border-b border-limeAccent/20 px-4 py-3 flex items-center justify-between shadow-md">
+        <div class="flex items-center gap-2.5">
+            <!-- Native SVG Logo -->
+            <div class="w-9 h-9 rounded-xl bg-limeAccent/10 border border-limeAccent/40 flex items-center justify-center font-bold text-limeAccent shadow-sm">
+                <svg class="w-5 h-5 stroke-limeAccent" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-sm font-bold leading-tight flex items-center gap-1.5">
+                    <span>TradeJournal</span>
+                    <span class="text-[9px] bg-limeAccent/20 text-limeAccent px-1.5 py-0.5 rounded font-black border border-limeAccent/30">AI+CSV</span>
+                </h1>
+                <p class="text-[11px] text-slate-300" id="user-greeting">@trader</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <!-- Language Dropdown Switcher -->
+            <select id="lang-select" onchange="changeLanguage(this.value)" class="bg-cardBg border border-limeAccent/30 text-limeAccent text-xs font-bold rounded-lg px-2 py-1.5 focus:outline-none cursor-pointer">
+                <option value="UKR">🇺🇦 UKR</option>
+                <option value="EN">🇬🇧 EN</option>
+                <option value="RU">🏳️ RU</option>
+            </select>
+
+            <!-- New Manual Trade Action -->
+            <button onclick="openAddModal()" class="flex items-center gap-1 bg-limeAccent hover:bg-[#99f01d] active:scale-95 transition-all text-slate-900 px-3 py-1.5 rounded-lg text-xs font-bold shadow-md shadow-limeAccent/20">
+                <svg class="w-4 h-4 stroke-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                </svg>
+                <span data-i18n="newTrade">Додати</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="p-4 flex-1 max-w-lg mx-auto w-full space-y-5">
+
+        <!-- TAB 1: DASHBOARD -->
+        <section id="tab-dashboard" class="tab-content space-y-4">
+            
+            <!-- Quick CSV Upload Banner -->
+            <div class="bg-cardBg lime-border rounded-xl p-3 flex items-center justify-between shadow-sm">
+                <div class="flex items-center gap-2.5">
+                    <div class="p-2 rounded-lg bg-limeAccent/10 border border-limeAccent/30 text-limeAccent">
+                        <svg class="w-5 h-5 stroke-limeAccent" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold text-slate-200" data-i18n="importBannerTitle">Імпорт з CSV-файлу</h4>
+                        <p class="text-[10px] text-slate-400" data-i18n="importBannerDesc">Bybit, Binance, MEXC, BingX</p>
+                    </div>
+                </div>
+                <button onclick="switchTab('import')" class="text-xs font-bold text-slate-900 bg-limeAccent hover:bg-[#9ebd1f] px-3 py-1.5 rounded-md transition-all flex items-center gap-1 active:scale-95 shadow">
+                    <svg class="w-3.5 h-3.5 stroke-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                    </svg>
+                    <span data-i18n="importBtn">Імпорт</span>
+                </button>
+            </div>
+
+            <!-- Summary Performance Card -->
+            <div class="bg-cardBg lime-border lime-glow rounded-2xl p-4 space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs text-slate-300 font-semibold uppercase tracking-wider" data-i18n="totalPnl">Загальний P&L</span>
+                    <div id="pnl-badge" class="px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        <svg class="w-3.5 h-3.5 stroke-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                        </svg>
+                        <span id="stat-pnl-percent">+0.0%</span>
+                    </div>
+                </div>
+                <div id="stat-total-pnl" class="text-3xl font-black text-limeAccent tracking-tight">$0.00</div>
+
+                <!-- Stats 2x2 Grid -->
+                <div class="grid grid-cols-2 gap-2.5 pt-2 border-t border-slate-700/60">
+                    <div class="bg-bgDark/80 p-2.5 rounded-xl border border-slate-700/50">
+                        <span class="text-[10px] text-slate-400 font-medium uppercase block" data-i18n="winRate">Win Rate</span>
+                        <div id="stat-winrate" class="text-base font-extrabold text-slate-100 mt-0.5">0%</div>
+                        <div class="w-full bg-slate-700 rounded-full h-1 mt-1.5 overflow-hidden">
+                            <div id="winrate-bar" class="bg-limeAccent h-1 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-bgDark/80 p-2.5 rounded-xl border border-slate-700/50">
+                        <span class="text-[10px] text-slate-400 font-medium uppercase block" data-i18n="profitFactor">Profit Factor</span>
+                        <div id="stat-profit-factor" class="text-base font-extrabold text-slate-100 mt-0.5">0.00</div>
+                        <span id="stat-win-loss-count" class="text-[9px] text-slate-400 block mt-0.5">0W / 0L</span>
+                    </div>
+
+                    <div class="bg-bgDark/80 p-2.5 rounded-xl border border-slate-700/50">
+                        <span class="text-[10px] text-slate-400 font-medium uppercase block" data-i18n="bestTrade">Кращий Трейд</span>
+                        <div id="stat-best-trade" class="text-sm font-bold text-emerald-400 mt-0.5">+$0.00</div>
+                    </div>
+
+                    <div class="bg-bgDark/80 p-2.5 rounded-xl border border-slate-700/50">
+                        <span class="text-[10px] text-slate-400 font-medium uppercase block" data-i18n="worstTrade">Гірший Трейд</span>
+                        <div id="stat-worst-trade" class="text-sm font-bold text-rose-400 mt-0.5">-$0.00</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive Chart Section -->
+            <div class="bg-cardBg lime-border rounded-2xl p-4 shadow-sm space-y-3">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                        <svg class="w-4 h-4 stroke-limeAccent" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18"/>
+                        </svg>
+                        <span data-i18n="equityCurve">Динаміка Балансу (Equity)</span>
+                    </h3>
+                    <span class="text-[10px] bg-bgDark text-limeAccent px-2 py-0.5 rounded border border-limeAccent/30 font-mono">USD</span>
+                </div>
+                <div class="h-48 w-full">
+                    <canvas id="equityChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Recent Trades -->
+            <div class="space-y-2.5">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider" data-i18n="recentTrades">Останні Угоди</h3>
+                    <button onclick="switchTab('trades')" class="text-xs text-limeAccent font-bold hover:underline" data-i18n="viewAll">Всі угоди &rarr;</button>
+                </div>
+                <div id="recent-trades-container" class="space-y-2">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: CSV IMPORT PAGE -->
+        <section id="tab-import" class="tab-content hidden space-y-4">
+            <div class="bg-cardBg lime-border rounded-2xl p-4 space-y-3">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 stroke-limeAccent" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                    </svg>
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-100" data-i18n="csvImportTitle">Авто-Імпорт Угод з CSV</h2>
+                        <p class="text-[11px] text-slate-400" data-i18n="csvImportSub">Завантажте експортовану історію торгівлі з вашої біржі.</p>
+                    </div>
+                </div>
+
+                <!-- Select Exchange Preset -->
+                <div class="space-y-1.5 pt-2">
+                    <label class="text-xs font-semibold text-slate-300 block" data-i18n="selectExchangeLbl">Виберіть біржа-джерело:</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" onclick="selectCsvPreset('bybit')" id="preset-bybit" class="csv-preset-btn py-2 px-3 bg-bgDark border border-slate-700 text-slate-300 font-bold text-xs rounded-xl flex items-center justify-center gap-2">
+                            <span>Bybit</span>
+                        </button>
+                        <button type="button" onclick="selectCsvPreset('binance')" id="preset-binance" class="csv-preset-btn py-2 px-3 bg-limeAccent/20 border border-limeAccent text-limeAccent font-bold text-xs rounded-xl flex items-center justify-center gap-2">
+                            <span>Binance</span>
+                        </button>
+                        <button type="button" onclick="selectCsvPreset('mexc')" id="preset-mexc" class="csv-preset-btn py-2 px-3 bg-bgDark border border-slate-700 text-slate-300 font-bold text-xs rounded-xl flex items-center justify-center gap-2">
+                            <span>MEXC</span>
+                        </button>
+                        <button type="button" onclick="selectCsvPreset('bingx')" id="preset-bingx" class="csv-preset-btn py-2 px-3 bg-bgDark border border-slate-700 text-slate-300 font-bold text-xs rounded-xl flex items-center justify-center gap-2">
+                            <span>BingX</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Drag & Drop Zone -->
+                <div id="drop-zone" onclick="document.getElementById('csv-file-input').click()" class="border-2 border-dashed border-limeAccent/40 bg-bgDark/60 hover:bg-bgDark p-6 rounded-xl text-center space-y-2 cursor-pointer transition-all">
+                    <svg class="w-8 h-8 stroke-limeAccent mx-auto animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                    </svg>
+                    <p class="text-xs font-bold text-slate-200" data-i18n="dragDropText">Перетягніть .CSV файл сюди або натисніть</p>
+                    <p class="text-[10px] text-slate-400" id="preset-help-text">Формат Binance Futures (USDⓢ-M Perpetual Futures)</p>
+                    <input type="file" id="csv-file-input" accept=".csv, .txt" class="hidden" onchange="handleFileSelect(event)">
+                </div>
+
+                <!-- Status Feedback -->
+                <div id="import-status" class="hidden p-3 rounded-xl text-xs border"></div>
+            </div>
+
+            <!-- Export / Backup Card -->
+            <div class="bg-cardBg lime-border rounded-2xl p-4 space-y-3">
+                <h3 class="text-xs font-bold text-slate-200 flex items-center gap-2">
+                    <svg class="w-4 h-4 stroke-limeAccent" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                    <span data-i18n="exportJournalTitle">Експорт Журналу</span>
+                </h3>
+                <p class="text-[11px] text-slate-400" data-i18n="exportJournalDesc">Збережіть усі свої угоди в універсальний CSV-файл резервної копії.</p>
+                <button onclick="exportToCSV()" class="w-full py-2.5 bg-limeAccent hover:bg-[#99f01d] text-slate-900 font-bold text-xs rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4 stroke-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <span data-i18n="exportBtn">Завантажити Резервну Копію (.CSV)</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- TAB 3: TRADES LOG -->
+        <section id="tab-trades" class="tab-content hidden space-y-3.5">
+            <!-- Filter & Search Panel -->
+            <div class="bg-cardBg lime-border rounded-xl p-3 space-y-2.5">
+                <div class="relative">
+                    <svg class="w-4 h-4 stroke-limeAccent absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <input type="text" id="filter-search" data-i18n-ph="searchPlaceholder" placeholder="Пошук тикера або нотаток..." oninput="renderTradeLog()" class="w-full bg-bgDark border border-slate-700/80 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-limeAccent">
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <select id="filter-exchange" onchange="renderTradeLog()" class="bg-bgDark border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none">
+                        <option value="ALL" data-i18n="allExchanges">Всі Джерела</option>
+                        <option value="Bybit">Bybit</option>
+                        <option value="Binance">Binance</option>
+                        <option value="MEXC">MEXC</option>
+                        <option value="BingX">BingX</option>
+                        <option value="Manual">Manual</option>
+                    </select>
+                    <select id="filter-dir" onchange="renderTradeLog()" class="bg-bgDark border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none">
+                        <option value="ALL" data-i18n="allDirs">Long &amp; Short</option>
+                        <option value="LONG">Long</option>
+                        <option value="SHORT">Short</option>
+                    </select>
+                    <select id="filter-status" onchange="renderTradeLog()" class="bg-bgDark border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none">
+                        <option value="ALL" data-i18n="allResults">Всі Результати</option>
+                        <option value="WIN">Win</option>
+                        <option value="LOSS">Loss</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- List Container -->
+            <div id="trades-list-container" class="space-y-2.5">
+                <!-- Loaded dynamically -->
+            </div>
+        </section>
+
+        <!-- TAB 4: ANALYTICS -->
+        <section id="tab-analytics" class="tab-content hidden space-y-4">
+            <h2 class="text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                <svg class="w-4 h-4 stroke-limeAccent" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
+                </svg>
+                <span data-i18n="analyticsTitle">Глибока Аналітика Торгівлі</span>
+            </h2>
+
+            <!-- Exchange Performance Chart -->
+            <div class="bg-cardBg lime-border rounded-2xl p-4 space-y-3">
+                <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider" data-i18n="chartExchangePnL">P&amp;L за Біржами ($)</h3>
+                <div class="h-44 w-full">
+                    <canvas id="exchangeChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Strategy Chart -->
+            <div class="bg-cardBg lime-border rounded-2xl p-4 space-y-3">
+                <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider" data-i18n="chartStrategy">Win Rate за Стратегіями (%)</h3>
+                <div class="h-44 w-full">
+                    <canvas id="strategyChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Emotion Analysis Chart -->
+            <div class="bg-cardBg lime-border rounded-2xl p-4 space-y-3">
+                <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider" data-i18n="chartEmotion">Результат за Емоційним Станом ($)</h3>
+                <div class="h-44 w-full">
+                    <canvas id="emotionChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 5: AI ANALYSIS -->
+        <section id="tab-ai" class="tab-content hidden space-y-4">
+            <div class="bg-cardBg lime-border lime-glow rounded-2xl p-4 space-y-3">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-sm font-bold text-slate-100 flex items-center gap-2">
+                        <svg class="w-4 h-4 stroke-limeAccent" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                        <span data-i18n="aiTitle">Штучний Інтелект — AI Ментор</span>
+                    </h2>
+                    <span class="text-[9px] bg-limeAccent/20 text-limeAccent px-2 py-0.5 rounded font-black border border-limeAccent/30">GPT-4o</span>
+                </div>
+                <p class="text-xs text-slate-300" data-i18n="aiSub">Аналіз вашої торгової історії, виявлення психологічних помилок, овертрейдингу та рекомендації щодо ризик-менеджменту.</p>
+                
+                <button onclick="runAiAnalysis()" class="w-full py-3 bg-limeAccent hover:bg-[#99f01d] text-slate-900 font-extrabold text-xs rounded-xl shadow-md active:scale-95 transition-all flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4 stroke-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                    </svg>
+                    <span data-i18n="btnRunAi">Провести глибокий AI-аудит угод</span>
+                </button>
+            </div>
+
+            <div id="ai-result-box" class="bg-cardBg lime-border rounded-2xl p-4 space-y-3 hidden">
+                <h3 class="text-xs font-bold text-limeAccent uppercase tracking-wider flex items-center gap-2">
+                    <svg class="w-4 h-4 stroke-limeAccent" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                    </svg>
+                    <span data-i18n="aiReportTitle">Звіт та Рекомендації AI Ментора</span>
+                </h3>
+                <div id="ai-content-text" class="text-xs text-slate-200 leading-relaxed space-y-2 font-sans">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 6: SETTINGS & LANG -->
+        <section id="tab-settings" class="tab-content hidden space-y-4">
+            <div class="bg-cardBg lime-border rounded-2xl p-4 space-y-4">
+                <h2 class="text-sm font-bold text-slate-100 flex items-center gap-2">
+                    <svg class="w-4 h-4 stroke-limeAccent" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    <span data-i18n="settingsTitle">Налаштування Профілю</span>
+                </h2>
+
+                <div class="space-y-3">
+                    <div>
+                        <label class="text-xs font-semibold text-slate-300 block mb-1" data-i18n="selectLang">Мова Інтерфейсу</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button onclick="changeLanguage('UKR')" id="lang-btn-UKR" class="py-2 border border-slate-700 rounded-lg text-xs font-bold bg-bgDark text-slate-300 active:scale-95 transition-all">🇺🇦 UKR</button>
+                            <button onclick="changeLanguage('EN')" id="lang-btn-EN" class="py-2 border border-slate-700 rounded-lg text-xs font-bold bg-bgDark text-slate-300 active:scale-95 transition-all">🇬🇧 EN</button>
+                            <button onclick="changeLanguage('RU')" id="lang-btn-RU" class="py-2 border border-slate-700 rounded-lg text-xs font-bold bg-bgDark text-slate-300 active:scale-95 transition-all">🏳️ RU</button>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-700/60">
+                        <label class="text-xs font-semibold text-slate-300 block mb-1" data-i18n="themeStyle">Колірна Гама</label>
+                        <div class="flex items-center justify-between p-2.5 bg-bgDark rounded-xl border border-limeAccent/30">
+                            <div class="flex items-center gap-2">
+                                <div class="w-4 h-4 rounded-full bg-limeAccent border border-black"></div>
+                                <span class="text-xs text-slate-200 font-semibold">Arsenic &amp; Lime (#3B444B / #ADFF2F)</span>
+                            </div>
+                            <span class="text-[10px] bg-limeAccent/20 text-limeAccent px-2 py-0.5 rounded font-bold" data-i18n="activeTheme">Активна</span>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-700/60 space-y-2">
+                        <button onclick="resetAllData()" class="w-full py-2.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4 stroke-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                            <span data-i18n="resetData">Скинути Всі Данні</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Bottom Navigation Bar (6 Tabs) -->
+    <nav class="fixed bottom-0 left-0 right-0 z-30 bg-[#3B444B]/95 backdrop-blur-md border-t border-limeAccent/20 max-w-lg mx-auto">
+        <div class="grid grid-cols-6 h-14">
+            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn flex flex-col items-center justify-center text-limeAccent font-bold transition-all">
+                <svg class="w-4 h-4 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                </svg>
+                <span class="text-[8px]" data-i18n="navDash">Дашборд</span>
+            </button>
+            <button onclick="switchTab('import')" id="nav-import" class="nav-btn flex flex-col items-center justify-center text-slate-400 transition-all">
+                <svg class="w-4 h-4 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                </svg>
+                <span class="text-[8px]" data-i18n="navImport">Імпорт</span>
+            </button>
+            <button onclick="switchTab('trades')" id="nav-trades" class="nav-btn flex flex-col items-center justify-center text-slate-400 transition-all">
+                <svg class="w-4 h-4 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+                <span class="text-[8px]" data-i18n="navTrades">Угоди</span>
+            </button>
+            <button onclick="switchTab('analytics')" id="nav-analytics" class="nav-btn flex flex-col items-center justify-center text-slate-400 transition-all">
+                <svg class="w-4 h-4 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                <span class="text-[8px]" data-i18n="navAnalytics">Статистика</span>
+            </button>
+            <button onclick="switchTab('ai')" id="nav-ai" class="nav-btn flex flex-col items-center justify-center text-slate-400 transition-all">
+                <svg class="w-4 h-4 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                <span class="text-[8px]" data-i18n="navAi">AI Ментор</span>
+            </button>
+            <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn flex flex-col items-center justify-center text-slate-400 transition-all">
+                <svg class="w-4 h-4 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span class="text-[8px]" data-i18n="navSettings">Налаштування</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Modal: Add / Edit Trade -->
+    <div id="add-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center hidden opacity-0 transition-opacity duration-200">
+        <div class="bg-bgDark border border-limeAccent/30 rounded-t-2xl sm:rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-5 space-y-4 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+                <h3 class="text-sm font-bold text-slate-100 flex items-center gap-2" id="modal-title">
+                    <svg class="w-4 h-4 stroke-limeAccent" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span data-i18n="modalAddTitle">Ручне введення угоди</span>
+                </h3>
+                <button onclick="closeAddModal()" class="text-slate-400 hover:text-white p-1">
+                    <svg class="w-5 h-5 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <form id="trade-form" onsubmit="saveTrade(event)" class="space-y-3">
+                <input type="hidden" id="trade-id">
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[10px] font-semibold text-slate-400 block mb-1" data-i18n="lblSymbol">Торгова Пара</label>
+                        <input type="text" id="trade-symbol" placeholder="BTC/USDT" required class="w-full bg-cardBg border border-slate-700 rounded-lg px-3 py-2 text-xs uppercase font-bold text-slate-100 focus:outline-none focus:border-limeAccent">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-semibold text-slate-400 block mb-1" data-i18n="lblDirection">Напрямок</label>
+                        <div class="grid grid-cols-2 gap-1 bg-cardBg p-1 rounded-lg border border-slate-700">
+                            <button type="button" id="btn-dir-long" onclick="setDirection('LONG')" class="py-1 rounded text-xs font-bold transition-all bg-emerald-600 text-white">Long</button>
+                            <button type="button" id="btn-dir-short" onclick="setDirection('SHORT')" class="py-1 rounded text-xs font-bold transition-all text-slate-400 hover:text-white">Short</button>
+                        </div>
+                        <input type="hidden" id="trade-direction" value="LONG">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[10px] font-semibold text-slate-400 block mb-1" data-i18n="lblExchange">Джерело / Біржа</label>
+                        <select id="trade-exchange" class="w-full bg-cardBg border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-limeAccent">
+                            <option value="Manual">Manual (Ручний)</option>
+                            <option value="Bybit">Bybit</option>
+                            <option value="Binance">Binance</option>
+                            <option value="MEXC">MEXC</option>
+                            <option value="BingX">BingX</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-semibold text-slate-400 block mb-1" data-i18n="lblLeverage">Плече (Leverage)</label>
+                        <input type="number" id="trade-leverage" value="10" min="1" max="125" class="w-full bg-cardBg border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-limeAccent">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[10px] font-semibold text-slate-400 block mb-1" data-i18n="lblEntry">Вхід (Entry)</label>
+                        <input type="number" step="any" id="trade-entry" placeholder="0.00" required oninput="calculatePnL()" class="w-full bg-cardBg border border-slate-700 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-limeAccent">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-semibold text-slate-400 block mb-1" data-i18n="lblExit">Вихід (Exit)</label>
+                        <input type="number" step="any" id="trade-exit" placeholder="0.00" required oninput="calculatePnL()" class="w-full bg-cardBg border border-slate-700 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-limeAccent">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[10px] font-semibold text-slate-400 block mb-1" data-i18n="lblSize">Об'єм (Units)</label>
+                        <input type="number" step="any" id="trade-size" placeholder="1.0" required oninput="calculatePnL()" class="w-full bg-cardBg border border-slate-700 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-limeAccent">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-semibold text-slate-400 block mb-1" data-i18n="lblPnl">P&amp;L ($)</label>
+                        <input type="number" step="any" id="trade-pnl" placeholder="0.00" oninput="markManualPnl()" class="w-full bg-cardBg border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-limeAccent focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[10px] font-semibold text-slate-400 block mb-1" data-i18n="lblStrategy">Стратегія</label>
+                        <select id="trade-strategy" class="w-full bg-cardBg border border-slate-700 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-limeAccent text-slate-200">
+                            <option value="Smart Money / ICT">Smart Money / ICT</option>
+                            <option value="Breakout">Breakout</option>
+                            <option value="Trend Following">Trend Following</option>
+                            <option value="Scalping">Scalping</option>
+                            <option value="Range Trading">Range Trading</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-semibold text-slate-400 block mb-1" data-i18n="lblEmotion">Емоція</label>
+                        <select id="trade-emotion" class="w-full bg-cardBg border border-slate-700 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-limeAccent text-slate-200">
+                            <option value="Disciplined">🎯 Дисципліна</option>
+                            <option value="Confident">😎 Впевненість</option>
+                            <option value="FOMO">⚡ FOMO</option>
+                            <option value="Revenge">😡 Помста</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-semibold text-slate-400 block mb-1" data-i18n="lblDate">Дата та Час</label>
+                    <input type="datetime-local" id="trade-date" required class="w-full bg-cardBg border border-slate-700 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-limeAccent text-slate-200">
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-semibold text-slate-400 block mb-1" data-i18n="lblNotes">Нотатки</label>
+                    <textarea id="trade-notes" rows="2" placeholder="..." class="w-full bg-cardBg border border-slate-700 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-limeAccent"></textarea>
+                </div>
+
+                <div class="pt-2 flex gap-2">
+                    <button type="button" onclick="closeAddModal()" class="w-1/3 py-2.5 rounded-xl border border-slate-700 text-slate-300 font-semibold text-xs hover:bg-cardBg active:scale-95 transition-all" data-i18n="btnCancel">Скасувати</button>
+                    <button type="submit" class="w-2/3 py-2.5 rounded-xl bg-limeAccent hover:bg-[#99f01d] text-slate-900 font-bold text-xs shadow-md shadow-limeAccent/20 active:scale-95 transition-all" data-i18n="btnSave">Зберегти Угоду</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Detail View -->
+    <div id="detail-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center hidden opacity-0 transition-opacity duration-200">
+        <div class="bg-bgDark border border-limeAccent/30 rounded-t-2xl sm:rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-5 space-y-4 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+                <div class="flex items-center gap-2">
+                    <span id="detail-symbol" class="text-base font-black tracking-wide text-white">BTC/USDT</span>
+                    <span id="detail-dir-badge" class="px-2 py-0.5 rounded text-[10px] font-bold">LONG</span>
+                    <span id="detail-exchange-badge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-limeAccent/20 text-limeAccent border border-limeAccent/30">BYBIT</span>
+                </div>
+                <button onclick="closeDetailModal()" class="text-slate-400 hover:text-white p-1">
+                    <svg class="w-5 h-5 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div id="detail-content" class="space-y-3">
+                <!-- Dynamic Content -->
+            </div>
+
+            <div class="pt-2 flex gap-2 border-t border-slate-700">
+                <button id="btn-delete-trade" onclick="" class="flex-1 py-2.5 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-400 font-semibold text-xs hover:bg-rose-500/20 active:scale-95 transition-all flex items-center justify-center gap-1.5">
+                    <svg class="w-4 h-4 stroke-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                    <span data-i18n="btnDelete">Видалити</span>
+                </button>
+                <button id="btn-edit-trade" onclick="" class="flex-1 py-2.5 rounded-xl bg-cardBg border border-slate-700 text-slate-200 font-semibold text-xs hover:bg-slate-700 active:scale-95 transition-all flex items-center justify-center gap-1.5">
+                    <svg class="w-4 h-4 stroke-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                    <span data-i18n="btnEdit">Редагувати</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- TRANSLATIONS DICTIONARY ---
+        const i18n = {
+            UKR: {
+                newTrade: "Додати",
+                importBannerTitle: "Імпорт з CSV-файлу",
+                importBannerDesc: "Bybit, Binance, MEXC, BingX",
+                importBtn: "Імпорт",
+                totalPnl: "Загальний P&L",
+                winRate: "Win Rate",
+                profitFactor: "Profit Factor",
+                bestTrade: "Кращий Трейд",
+                worstTrade: "Гірший Трейд",
+                equityCurve: "Динаміка Балансу (Equity)",
+                recentTrades: "Останні Угоди",
+                viewAll: "Всі угоди &rarr;",
+                csvImportTitle: "Авто-Імпорт Угод з CSV",
+                csvImportSub: "Завантажте експортовану історію торгівлі з вашої біржі.",
+                selectExchangeLbl: "Виберіть біржа-джерело:",
+                dragDropText: "Перетягніть .CSV файл сюди або натисніть",
+                exportJournalTitle: "Експорт Журналу",
+                exportJournalDesc: "Збережіть усі свої угоди в універсальний CSV-файл резервної копії.",
+                exportBtn: "Завантажити Резервну Копію (.CSV)",
+                searchPlaceholder: "Пошук тикера або нотаток...",
+                allExchanges: "Всі Джерела",
+                allDirs: "Long & Short",
+                allResults: "Всі Результати",
+                analyticsTitle: "Глибока Аналітика Торгівлі",
+                chartExchangePnL: "P&L за Біржами ($)",
+                chartStrategy: "Win Rate за Стратегіями (%)",
+                chartEmotion: "P&L за Емоційним Станом ($)",
+                aiTitle: "Штучний Інтелект — AI Ментор",
+                aiSub: "Аналіз вашої торгової історії, виявлення психологічних помилок, овертрейдингу та рекомендації щодо ризик-менеджменту.",
+                btnRunAi: "Провести глибокий AI-аудит угод",
+                aiReportTitle: "Звіт та Рекомендації AI Ментора",
+                settingsTitle: "Налаштування Профілю",
+                selectLang: "Мова Інтерфейсу",
+                themeStyle: "Колірна Гама",
+                activeTheme: "Активна",
+                resetData: "Скинути Всі Данні",
+                navDash: "Дашборд",
+                navImport: "Імпорт",
+                navTrades: "Угоди",
+                navAnalytics: "Статистика",
+                navAi: "AI Ментор",
+                navSettings: "Налаштування",
+                modalAddTitle: "Ручне введення угоди",
+                lblSymbol: "Торгова Пара",
+                lblDirection: "Напрямок",
+                lblExchange: "Джерело / Біржа",
+                lblLeverage: "Плече (Leverage)",
+                lblEntry: "Вхід (Entry)",
+                lblExit: "Вихід (Exit)",
+                lblSize: "Об'єм (Units)",
+                lblPnl: "P&L ($)",
+                lblStrategy: "Стратегія",
+                lblEmotion: "Емоція",
+                lblDate: "Дата та Час",
+                lblNotes: "Нотатки",
+                btnCancel: "Скасувати",
+                btnSave: "Зберегти Угоду",
+                btnDelete: "Видалити",
+                btnEdit: "Редагувати"
+            },
+            EN: {
+                newTrade: "Add Trade",
+                importBannerTitle: "Import CSV File",
+                importBannerDesc: "Bybit, Binance, MEXC, BingX",
+                importBtn: "Import",
+                totalPnl: "Total P&L",
+                winRate: "Win Rate",
+                profitFactor: "Profit Factor",
+                bestTrade: "Best Trade",
+                worstTrade: "Worst Trade",
+                equityCurve: "Equity Curve",
+                recentTrades: "Recent Trades",
+                viewAll: "View All &rarr;",
+                csvImportTitle: "Auto CSV Trade Import",
+                csvImportSub: "Upload trade history export file from your exchange.",
+                selectExchangeLbl: "Select Source Exchange:",
+                dragDropText: "Drag & drop .CSV file here or click",
+                exportJournalTitle: "Export Journal",
+                exportJournalDesc: "Save all your trades into a universal CSV backup file.",
+                exportBtn: "Download Backup (.CSV)",
+                searchPlaceholder: "Search symbol or notes...",
+                allExchanges: "All Sources",
+                allDirs: "Long & Short",
+                allResults: "All Results",
+                analyticsTitle: "Deep Trade Analytics",
+                chartExchangePnL: "P&L by Exchange ($)",
+                chartStrategy: "Win Rate by Strategy (%)",
+                chartEmotion: "P&L by Emotional State ($)",
+                aiTitle: "Artificial Intelligence — AI Mentor",
+                aiSub: "Analysis of your trading history, detection of psychological traps, overtrading, and risk management recommendations.",
+                btnRunAi: "Run Deep AI Trade Audit",
+                aiReportTitle: "AI Mentor Report & Recommendations",
+                settingsTitle: "Profile Settings",
+                selectLang: "Interface Language",
+                themeStyle: "Color Palette",
+                activeTheme: "Active",
+                resetData: "Reset All Data",
+                navDash: "Dashboard",
+                navImport: "Import",
+                navTrades: "Journal",
+                navAnalytics: "Stats",
+                navAi: "AI Mentor",
+                navSettings: "Settings",
+                modalAddTitle: "Manual Trade Entry",
+                lblSymbol: "Trading Pair",
+                lblDirection: "Direction",
+                lblExchange: "Source / Exchange",
+                lblLeverage: "Leverage",
+                lblEntry: "Entry Price",
+                lblExit: "Exit Price",
+                lblSize: "Size (Units)",
+                lblPnl: "P&L ($)",
+                lblStrategy: "Strategy",
+                lblEmotion: "Emotion",
+                lblDate: "Date & Time",
+                lblNotes: "Notes",
+                btnCancel: "Cancel",
+                btnSave: "Save Trade",
+                btnDelete: "Delete",
+                btnEdit: "Edit"
+            },
+            RU: {
+                newTrade: "Добавить",
+                importBannerTitle: "Импорт из CSV-файла",
+                importBannerDesc: "Bybit, Binance, MEXC, BingX",
+                importBtn: "Импорт",
+                totalPnl: "Общий P&L",
+                winRate: "Win Rate",
+                profitFactor: "Profit Factor",
+                bestTrade: "Лучший Трейд",
+                worstTrade: "Худший Трейд",
+                equityCurve: "Динамика Баланса (Equity)",
+                recentTrades: "Последние Сделки",
+                viewAll: "Все сделки &rarr;",
+                csvImportTitle: "Авто-Импорт Сделок из CSV",
+                csvImportSub: "Загрузите экспортированную историю торговли с биржи.",
+                selectExchangeLbl: "Выберите биржу-источник:",
+                dragDropText: "Перетащите .CSV файл сюда или нажмите",
+                exportJournalTitle: "Экспорт Журнала",
+                exportJournalDesc: "Сохраните все свои сделки в универсальный CSV-файл резервной копии.",
+                exportBtn: "Скачать Резервную Копию (.CSV)",
+                searchPlaceholder: "Поиск тикера или заметок...",
+                allExchanges: "Все Источники",
+                allDirs: "Long & Short",
+                allResults: "Все Результаты",
+                analyticsTitle: "Глубокая Аналитика Торговли",
+                chartExchangePnL: "P&L по Биржам ($)",
+                chartStrategy: "Win Rate по Стратегиям (%)",
+                chartEmotion: "P&L по Эмоциональному Состоянию ($)",
+                aiTitle: "Искусственный Интеллект — AI Ментор",
+                aiSub: "Анализ вашей торговой истории, выявление психологических ошибок, овертрейдинга и рекомендации по риск-менеджменту.",
+                btnRunAi: "Провести глубокий AI-аудит сделок",
+                aiReportTitle: "Отчет и Рекомендации AI Ментора",
+                settingsTitle: "Настройки Профиля",
+                selectLang: "Язык Интерфейса",
+                themeStyle: "Цветовая Гамма",
+                activeTheme: "Активная",
+                resetData: "Сбросить Все Данные",
+                navDash: "Дашборд",
+                navImport: "Импорт",
+                navTrades: "Сделки",
+                navAnalytics: "Статистика",
+                navAi: "AI Ментор",
+                navSettings: "Настройки",
+                modalAddTitle: "Ручной ввод сделки",
+                lblSymbol: "Торговая Пара",
+                lblDirection: "Направление",
+                lblExchange: "Источник / Биржа",
+                lblLeverage: "Плечо (Leverage)",
+                lblEntry: "Вход (Entry)",
+                lblExit: "Выход (Exit)",
+                lblSize: "Объем (Units)",
+                lblPnl: "P&L ($)",
+                lblStrategy: "Стратегия",
+                lblEmotion: "Эмоция",
+                lblDate: "Дата и Время",
+                lblNotes: "Заметки",
+                btnCancel: "Отмена",
+                btnSave: "Сохранить Сделку",
+                btnDelete: "Удалить",
+                btnEdit: "Редактировать"
+            }
+        };
+
+        let currentLang = 'UKR';
+        let selectedPreset = 'binance';
+        let trades = [];
+        let userIdKey = 'ts_trades_guest';
+        let isManualPnlOverride = false;
+
+        // Telegram WebApp Setup
+        const tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.ready();
+            tg.expand();
+            const user = tg.initDataUnsafe?.user;
+            if (user) {
+                document.getElementById('user-greeting').innerText = `@${user.username || user.first_name}`;
+                userIdKey = `ts_trades_user_${user.id}`;
+            }
+        }
+
+        function triggerHaptic(type = 'light') {
+            if (tg?.HapticFeedback) {
+                if (type === 'light') tg.HapticFeedback.impactOccurred('light');
+                if (type === 'medium') tg.HapticFeedback.impactOccurred('medium');
+                if (type === 'success') tg.HapticFeedback.notificationOccurred('success');
+                if (type === 'warning') tg.HapticFeedback.notificationOccurred('warning');
+            }
+        }
+
+        // Chart Instances
+        let equityChartInstance = null;
+        let exchangeChartInstance = null;
+        let strategyChartInstance = null;
+        let emotionChartInstance = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadState();
+            updateLanguageUI();
+            switchTab('dashboard');
+            initDragAndDrop();
+        });
+
+        // State Persistence Per User ID
+        function loadState() {
+            const savedLang = localStorage.getItem('ts_lang');
+            if (savedLang) {
+                currentLang = savedLang;
+                document.getElementById('lang-select').value = currentLang;
+            }
+
+            const localTrades = localStorage.getItem(userIdKey);
+            if (localTrades) {
+                try { trades = JSON.parse(localTrades); } catch(e) { trades = []; }
+            } else {
+                trades = []; 
+            }
+
+            updateDashboard();
+            renderTradeLog();
+        }
+
+        function saveTradesState() {
+            const dataStr = JSON.stringify(trades);
+            localStorage.setItem(userIdKey, dataStr);
+            if (tg?.CloudStorage) {
+                tg.CloudStorage.setItem(userIdKey, dataStr);
+            }
+        }
+
+        // Translation Engine
+        function changeLanguage(lang) {
+            triggerHaptic('light');
+            currentLang = lang;
+            localStorage.setItem('ts_lang', lang);
+            document.getElementById('lang-select').value = lang;
+            updateLanguageUI();
+            renderTradeLog();
+            updateDashboard();
+        }
+
+        function updateLanguageUI() {
+            const dict = i18n[currentLang];
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (dict[key]) el.innerText = dict[key];
+            });
+            document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+                const key = el.getAttribute('data-i18n-ph');
+                if (dict[key]) el.placeholder = dict[key];
+            });
+
+            ['UKR', 'EN', 'RU'].forEach(l => {
+                const btn = document.getElementById(`lang-btn-${l}`);
+                if (btn) {
+                    btn.className = l === currentLang 
+                        ? 'py-2 border border-limeAccent bg-limeAccent/20 text-limeAccent font-bold text-xs rounded-lg active:scale-95 transition-all'
+                        : 'py-2 border border-slate-700 bg-bgDark text-slate-300 font-bold text-xs rounded-lg active:scale-95 transition-all';
+                }
+            });
+        }
+
+        // Tab Navigation
+        function switchTab(tabName) {
+            triggerHaptic('light');
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(el => {
+                el.classList.remove('text-limeAccent', 'font-bold');
+                el.classList.add('text-slate-400');
+            });
+
+            const activeTab = document.getElementById(`tab-${tabName}`);
+            if (activeTab) activeTab.classList.remove('hidden');
+
+            const activeNav = document.getElementById(`nav-${tabName}`);
+            if (activeNav) {
+                activeNav.classList.remove('text-slate-400');
+                activeNav.classList.add('text-limeAccent', 'font-bold');
+            }
+
+            if (tabName === 'dashboard') updateDashboard();
+            else if (tabName === 'analytics') renderAnalyticsCharts();
+            else if (tabName === 'trades') renderTradeLog();
+        }
+
+        // Preset Selector for CSV
+        function selectCsvPreset(preset) {
+            triggerHaptic('light');
+            selectedPreset = preset;
+            document.querySelectorAll('.csv-preset-btn').forEach(btn => {
+                btn.className = 'csv-preset-btn py-2 px-3 bg-bgDark border border-slate-700 text-slate-300 font-bold text-xs rounded-xl flex items-center justify-center gap-2';
+            });
+            const activeBtn = document.getElementById(`preset-${preset}`);
+            if (activeBtn) {
+                activeBtn.className = 'csv-preset-btn py-2 px-3 bg-limeAccent/20 border border-limeAccent text-limeAccent font-bold text-xs rounded-xl flex items-center justify-center gap-2';
+            }
+
+            const helpEl = document.getElementById('preset-help-text');
+            if (preset === 'bybit') helpEl.innerText = 'Формат Bybit Closed PnL / Trade History (.csv)';
+            if (preset === 'binance') helpEl.innerText = 'Формат Binance Futures (USDⓢ-M Perpetual Futures)';
+            if (preset === 'mexc') helpEl.innerText = 'Формат MEXC Futures / Spot Export (.csv)';
+            if (preset === 'bingx') helpEl.innerText = 'Формат BingX Trade / Closed PnL History (.csv)';
+        }
+
+        // Drag & Drop & File Select
+        function initDragAndDrop() {
+            const dropZone = document.getElementById('drop-zone');
+            if(!dropZone) return;
+
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }, false);
+            });
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => dropZone.classList.add('border-limeAccent', 'bg-limeAccent/10'), false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => dropZone.classList.remove('border-limeAccent', 'bg-limeAccent/10'), false);
+            });
+
+            dropZone.addEventListener('drop', e => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                if (files.length > 0) processCSVFile(files[0]);
+            }, false);
+        }
+
+        function handleFileSelect(e) {
+            const files = e.target.files;
+            if (files.length > 0) processCSVFile(files[0]);
+        }
+
+        // Universal Robust CSV Parser Engine
+        function processCSVFile(file) {
+            triggerHaptic('medium');
+            const statusEl = document.getElementById('import-status');
+            statusEl.classList.remove('hidden');
+            statusEl.innerText = 'Парсинг файлу та аналіз колонок...';
+            statusEl.className = 'p-3 rounded-xl text-xs border bg-cardBg border-slate-700 text-slate-300';
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const text = evt.target.result;
+                    const parsedTrades = parseCSVUniversal(text, selectedPreset);
+
+                    if (parsedTrades.length === 0) {
+                        throw new Error('Не знайдено завершених угод або неможливо розпізнати формат CSV. Перевірте файл.');
+                    }
+
+                    let importedCount = 0;
+                    parsedTrades.forEach(pt => {
+                        const exists = trades.some(t => t.symbol === pt.symbol && Math.abs(t.pnl - pt.pnl) < 0.001 && t.date === pt.date);
+                        if (!exists) {
+                            trades.unshift(pt);
+                            importedCount++;
+                        }
+                    });
+
+                    trades.sort((a,b) => new Date(b.date) - new Date(a.date));
+                    saveTradesState();
+
+                    statusEl.className = 'p-3 rounded-xl text-xs border bg-emerald-500/10 border-emerald-500/30 text-emerald-400 font-bold';
+                    statusEl.innerText = `Успішно імпортовано ${importedCount} угод з ${({bybit:'Bybit',binance:'Binance',mexc:'MEXC',bingx:'BingX'})[selectedPreset] || selectedPreset}. Розпізнано: ${parsedTrades.length}; пропущено дублікатів: ${parsedTrades.length-importedCount}.`;
+                    triggerHaptic('success');
+
+                    setTimeout(() => {
+                        switchTab('trades');
+                    }, 800);
+
+                } catch (err) {
+                    statusEl.className = 'p-3 rounded-xl text-xs border bg-rose-500/10 border-rose-500/30 text-rose-400 font-bold';
+                    statusEl.innerText = err.message || 'Помилка розбору файлу.';
+                    triggerHaptic('warning');
+                }
+            };
+            reader.readAsText(file, 'UTF-8');
+        }
+
+        function parseCSVUniversal(csvText, preset) {
+            // RFC4180-style parser: preserves commas/newlines inside quoted fields.
+            const text = String(csvText || '').replace(/^\uFEFF/, '');
+            const firstNonEmpty = text.split(/\r?\n/).find(x => x.trim()) || '';
+            const candidates = [',', ';', '\t'];
+            const delimiter = candidates.map(d => ({d, n:(firstNonEmpty.match(new RegExp(d === '\t' ? '\\t' : '\\' + d, 'g')) || []).length}))
+                .sort((a,b)=>b.n-a.n)[0].d;
+            const rows = [];
+            let row = [], field = '', quoted = false;
+            for (let i=0; i<text.length; i++) {
+                const c = text[i];
+                if (c === '"') {
+                    if (quoted && text[i+1] === '"') { field += '"'; i++; }
+                    else quoted = !quoted;
+                } else if (!quoted && c === delimiter) {
+                    row.push(field.trim()); field = '';
+                } else if (!quoted && (c === '\n' || c === '\r')) {
+                    if (c === '\r' && text[i+1] === '\n') i++;
+                    row.push(field.trim());
+                    if (row.some(v => v !== '')) rows.push(row);
+                    row=[]; field='';
+                } else field += c;
+            }
+            if (field.length || row.length) { row.push(field.trim()); if (row.some(v=>v!=='')) rows.push(row); }
+            if (rows.length < 2) return [];
+
+            const norm = v => String(v || '').toLowerCase().trim().replace(/[\s_\-()[\]]+/g,' ').replace(/[：:]/g,'').replace(/[%$]/g,'');
+            const headers = rows[0].map(norm);
+            const findIndex = names => {
+                // Exact matches first to avoid "price" accidentally matching "entry price".
+                for (const name of names) { const i=headers.findIndex(h=>h===norm(name)); if(i>=0)return i; }
+                for (const name of names) { const n=norm(name); const i=headers.findIndex(h=>h.includes(n)); if(i>=0)return i; }
+                return -1;
+            };
+            const value = (r, names) => { const i=findIndex(names); return i>=0 ? String(r[i] ?? '').trim() : ''; };
+            const number = raw => {
+                if (raw === null || raw === undefined || raw === '') return NaN;
+                let v=String(raw).trim().replace(/[,$€£¥\s]/g,'').replace(/^\((.*)\)$/,'-$1');
+                if (v.includes(',') && !v.includes('.')) v=v.replace(',','.');
+                return Number(v);
+            };
+            const dateValue = raw => {
+                if (!raw) return '';
+                const v=String(raw).trim();
+                let d;
+                if (/^\d{10,13}$/.test(v)) { const n=Number(v); d=new Date(v.length===10?n*1000:n); }
+                else d=new Date(v);
+                if (Number.isNaN(d.getTime())) return '';
+                // Keep local date/time fields instead of shifting through UTC.
+                const pad=n=>String(n).padStart(2,'0');
+                return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+            };
+            const symbolNames=['symbol','trading pair','pair','contract','contract name','instrument','market','ticker','交易对','合约','交易品种','монета','пара'];
+            const pnlNames=['realized pnl','realized p&l','realized profit loss','realized profit','closed pnl','closed profit loss','close pnl','pnl','profit loss','profit','p&l','盈亏','已实现盈亏','доход'];
+            const entryNames=['avg open price','average entry price','entry price','open price','avg entry price','open avg price','entry'];
+            const exitNames=['avg close price','average exit price','exit price','close price','close avg price','exit'];
+            const sizeNames=['closed volume','closed qty','closed size','executed qty','filled qty','quantity','qty','size','volume','amount','成交数量','平仓数量','количество','объем'];
+            const sideNames=['position side','position direction','side','direction','position','交易方向','方向','сторона','направление'];
+            const dateNames=['closed time','close time','closing time','updated time','trade time','time','timestamp','date','created time','fill time','平仓时间','成交时间','日期','时间'];
+            const leverageNames=['leverage','leverage rate','杠杆','плечо'];
+            const exchangeName = ({bybit:'Bybit',binance:'Binance',mexc:'MEXC',bingx:'BingX'})[preset] || 'Manual';
+            const out=[];
+            for (let ri=1; ri<rows.length; ri++) {
+                const r=rows[ri];
+                if (!r || r.every(v=>!String(v||'').trim())) continue;
+                const rawSymbol=value(r,symbolNames);
+                if (!rawSymbol) continue;
+                let symbol=rawSymbol.toUpperCase().replace(/\s/g,'').replace(/[-_]/g,'/');
+                if (!symbol.includes('/')) {
+                    const quote=['USDT','USDC','BUSD','USD','BTC','ETH'].find(q=>symbol.endsWith(q) && symbol.length>q.length);
+                    if (quote) symbol=symbol.slice(0,-quote.length)+'/'+quote;
+                }
+                const side=value(r,sideNames).toUpperCase();
+                let direction;
+                if (/\bSHORT\b|SELL|空|做空|шорт/.test(side)) direction='SHORT';
+                else if (/\bLONG\b|BUY|多|做多|лонг/.test(side)) direction='LONG';
+                else direction=''; // Don't infer position direction from an ambiguous order side.
+                let pnlRaw=value(r,pnlNames);
+                let pnl=number(pnlRaw);
+                const entry=number(value(r,entryNames));
+                const exit=number(value(r,exitNames));
+                const sizeRaw=number(value(r,sizeNames));
+                const date=dateValue(value(r,dateNames));
+                const levRaw=number(value(r,leverageNames));
+                // Avoid manufacturing fake $0 trades from unrelated account/order exports.
+                if (!Number.isFinite(pnl) || !date) continue;
+                if (!direction) {
+                    // Some closed-position exports label direction as "Sell/Buy"; only accept these when
+                    // the header itself explicitly represents position side, otherwise skip ambiguity.
+                    const posIdx=headers.findIndex(h=>h==='position side'||h==='position direction');
+                    if (posIdx>=0) {
+                        const ps=String(r[posIdx]||'').toUpperCase();
+                        if (ps.includes('LONG')) direction='LONG';
+                        else if (ps.includes('SHORT')) direction='SHORT';
+                    }
+                }
+                if (!direction) continue;
+                out.push({
+                    id:'csv_'+(globalThis.crypto?.randomUUID?.() || (Date.now()+'_'+Math.random().toString(36).slice(2))),
+                    symbol, direction, exchange:exchangeName,
+                    leverage:Number.isFinite(levRaw)&&levRaw>0?levRaw:1,
+                    entry:Number.isFinite(entry)&&entry>0?entry:0,
+                    exit:Number.isFinite(exit)&&exit>0?exit:0,
+                    size:Number.isFinite(sizeRaw)&&sizeRaw>0?Math.abs(sizeRaw):0,
+                    pnl, strategy:'Imported', emotion:'Not recorded', date,
+                    notes:`Imported from ${exchangeName} CSV. Original row ${ri+1}.`
+                });
+            }
+            return out;
+        }
+
+        // Export Journal to CSV
+        function exportToCSV() {
+            triggerHaptic('medium');
+            if (trades.length === 0) {
+                alert('Журнал порожній.');
+                return;
+            }
+
+            const headers = ['Symbol', 'Direction', 'Exchange', 'Leverage', 'Entry', 'Exit', 'Size', 'PnL', 'Strategy', 'Emotion', 'Date', 'Notes'];
+            const rows = trades.map(t => [
+                `"${t.symbol}"`,
+                `"${t.direction}"`,
+                `"${t.exchange}"`,
+                t.leverage,
+                t.entry,
+                t.exit,
+                t.size,
+                t.pnl,
+                `"${t.strategy}"`,
+                `"${t.emotion}"`,
+                `"${t.date}"`,
+                `"${(t.notes || '').replace(/"/g, '""')}"`
+            ]);
+
+            const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `trading_journal_backup_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Manual Form Actions
+        function setDirection(dir) {
+            triggerHaptic('light');
+            document.getElementById('trade-direction').value = dir;
+            const btnLong = document.getElementById('btn-dir-long');
+            const btnShort = document.getElementById('btn-dir-short');
+
+            if (dir === 'LONG') {
+                btnLong.className = 'py-1 rounded text-xs font-bold transition-all bg-emerald-600 text-white';
+                btnShort.className = 'py-1 rounded text-xs font-bold transition-all text-slate-400 hover:text-white';
+            } else {
+                btnShort.className = 'py-1 rounded text-xs font-bold transition-all bg-rose-600 text-white';
+                btnLong.className = 'py-1 rounded text-xs font-bold transition-all text-slate-400 hover:text-white';
+            }
+            isManualPnlOverride = false;
+            calculatePnL();
+        }
+
+        function markManualPnl() {
+            isManualPnlOverride = true;
+        }
+
+        function calculatePnL() {
+            if (isManualPnlOverride) return;
+
+            const entry = parseFloat(document.getElementById('trade-entry').value) || 0;
+            const exit = parseFloat(document.getElementById('trade-exit').value) || 0;
+            const size = parseFloat(document.getElementById('trade-size').value) || 0;
+            const dir = document.getElementById('trade-direction').value;
+
+            if (entry > 0 && exit > 0 && size > 0) {
+                let pnl = dir === 'LONG' ? (exit - entry) * size : (entry - exit) * size;
+                document.getElementById('trade-pnl').value = pnl.toFixed(2);
+            }
+        }
+
+        function saveTrade(e) {
+            e.preventDefault();
+            triggerHaptic('success');
+
+            const id = document.getElementById('trade-id').value || 'm_' + Date.now();
+            const symbol = document.getElementById('trade-symbol').value.toUpperCase().trim();
+            const direction = document.getElementById('trade-direction').value;
+            const exchange = document.getElementById('trade-exchange').value;
+            const leverage = parseInt(document.getElementById('trade-leverage').value) || 1;
+            const entry = parseFloat(document.getElementById('trade-entry').value);
+            const exit = parseFloat(document.getElementById('trade-exit').value);
+            const size = parseFloat(document.getElementById('trade-size').value);
+            const pnl = parseFloat(document.getElementById('trade-pnl').value) || 0;
+            const strategy = document.getElementById('trade-strategy').value;
+            const emotion = document.getElementById('trade-emotion').value;
+            const date = document.getElementById('trade-date').value;
+            const notes = document.getElementById('trade-notes').value;
+
+            const tradeData = { id, symbol, direction, exchange, leverage, entry, exit, size, pnl, strategy, emotion, date, notes };
+
+            const existingIndex = trades.findIndex(t => t.id === id);
+            if (existingIndex >= 0) trades[existingIndex] = tradeData;
+            else trades.unshift(tradeData);
+
+            trades.sort((a,b) => new Date(b.date) - new Date(a.date));
+
+            saveTradesState();
+            closeAddModal();
+            updateDashboard();
+            renderTradeLog();
+        }
+
+        function openAddModal(editTrade = null) {
+            triggerHaptic('medium');
+            const modal = document.getElementById('add-modal');
+            const form = document.getElementById('trade-form');
+            form.reset();
+            isManualPnlOverride = false;
+
+            if (editTrade) {
+                document.getElementById('trade-id').value = editTrade.id;
+                document.getElementById('trade-symbol').value = editTrade.symbol;
+                setDirection(editTrade.direction);
+                document.getElementById('trade-exchange').value = editTrade.exchange || 'Manual';
+                document.getElementById('trade-leverage').value = editTrade.leverage || 10;
+                document.getElementById('trade-entry').value = editTrade.entry;
+                document.getElementById('trade-exit').value = editTrade.exit;
+                document.getElementById('trade-size').value = editTrade.size;
+                document.getElementById('trade-pnl').value = editTrade.pnl;
+                document.getElementById('trade-strategy').value = editTrade.strategy;
+                document.getElementById('trade-emotion').value = editTrade.emotion;
+                document.getElementById('trade-date').value = editTrade.date;
+                document.getElementById('trade-notes').value = editTrade.notes || '';
+                isManualPnlOverride = true;
+            } else {
+                document.getElementById('trade-id').value = '';
+                setDirection('LONG');
+                const now = new Date();
+                now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                document.getElementById('trade-date').value = now.toISOString().slice(0, 16);
+            }
+
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        }
+
+        function closeAddModal() {
+            triggerHaptic('light');
+            const modal = document.getElementById('add-modal');
+            modal.classList.add('opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 200);
+        }
+
+        function openDetailModal(tradeId) {
+            triggerHaptic('medium');
+            const trade = trades.find(t => t.id === tradeId);
+            if (!trade) return;
+
+            const modal = document.getElementById('detail-modal');
+            document.getElementById('detail-symbol').innerText = trade.symbol;
+            
+            const dirBadge = document.getElementById('detail-dir-badge');
+            dirBadge.innerText = trade.direction;
+            dirBadge.className = trade.direction === 'LONG' 
+                ? 'px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                : 'px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30';
+
+            const exBadge = document.getElementById('detail-exchange-badge');
+            exBadge.innerText = (trade.exchange || 'Manual').toUpperCase();
+
+            const formattedDate = new Date(trade.date).toLocaleString('uk-UA', { dateStyle: 'medium', timeStyle: 'short' });
+            const pnlClass = trade.pnl >= 0 ? 'text-emerald-400' : 'text-rose-400';
+
+            document.getElementById('detail-content').innerHTML = `
+                <div class="bg-cardBg p-3 rounded-xl border border-slate-700 flex items-center justify-between">
+                    <div>
+                        <span class="text-[10px] text-slate-400 block">P&L Угоди</span>
+                        <span class="text-xl font-black ${pnlClass}">${trade.pnl >= 0 ? '+' : ''}$${trade.pnl.toFixed(2)}</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[10px] text-slate-400 block">Плече / Об'єм</span>
+                        <span class="text-xs font-bold text-limeAccent">${trade.leverage || 1}x • ${trade.size} u</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div class="bg-cardBg p-2.5 rounded-lg border border-slate-800">
+                        <span class="text-slate-400 block text-[9px]">Вхід</span>
+                        <span class="font-bold text-slate-100">${trade.entry}</span>
+                    </div>
+                    <div class="bg-cardBg p-2.5 rounded-lg border border-slate-800">
+                        <span class="text-slate-400 block text-[9px]">Вихід</span>
+                        <span class="font-bold text-slate-100">${trade.exit}</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div class="bg-cardBg p-2.5 rounded-lg border border-slate-800">
+                        <span class="text-slate-400 block text-[9px]">Стратегія</span>
+                        <span class="font-semibold text-limeAccent">${trade.strategy}</span>
+                    </div>
+                    <div class="bg-cardBg p-2.5 rounded-lg border border-slate-800">
+                        <span class="text-slate-400 block text-[9px]">Емоція</span>
+                        <span class="font-semibold text-amber-300">${trade.emotion}</span>
+                    </div>
+                </div>
+
+                <div class="bg-cardBg p-2.5 rounded-lg border border-slate-800 text-xs">
+                    <span class="text-slate-400 block text-[9px]">Дата & Час</span>
+                    <span class="font-medium text-slate-200">${formattedDate}</span>
+                </div>
+
+                ${trade.notes ? `
+                    <div class="bg-cardBg p-3 rounded-lg border border-slate-800">
+                        <span class="text-slate-400 block text-[9px] mb-1">Нотатки</span>
+                        <p class="text-xs text-slate-200 whitespace-pre-line">${trade.notes}</p>
+                    </div>
+                ` : ''}
+            `;
+
+            document.getElementById('btn-delete-trade').onclick = () => deleteTrade(trade.id);
+            document.getElementById('btn-edit-trade').onclick = () => {
+                closeDetailModal();
+                openAddModal(trade);
+            };
+
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        }
+
+        function closeDetailModal() {
+            triggerHaptic('light');
+            const modal = document.getElementById('detail-modal');
+            modal.classList.add('opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 200);
+        }
+
+        function deleteTrade(id) {
+            triggerHaptic('warning');
+            trades = trades.filter(t => t.id !== id);
+            saveTradesState();
+            closeDetailModal();
+            updateDashboard();
+            renderTradeLog();
+        }
+
+        function resetAllData() {
+            if (confirm('Видалити всі збережені угоди?')) {
+                trades = [];
+                saveTradesState();
+                updateDashboard();
+                renderTradeLog();
+            }
+        }
+
+        // Dashboard Calculation
+        function updateDashboard() {
+            const totalTrades = trades.length;
+            const wins = trades.filter(t => t.pnl > 0);
+            const losses = trades.filter(t => t.pnl < 0);
+            
+            const totalPnL = trades.reduce((acc, t) => acc + t.pnl, 0);
+            const winRate = totalTrades > 0 ? ((wins.length / totalTrades) * 100).toFixed(1) : '0.0';
+
+            const grossWin = wins.reduce((acc, t) => acc + t.pnl, 0);
+            const grossLoss = Math.abs(losses.reduce((acc, t) => acc + t.pnl, 0));
+            const profitFactor = grossLoss > 0 ? (grossWin / grossLoss).toFixed(2) : (grossWin > 0 ? 'MAX' : '0.00');
+
+            const best = trades.length > 0 ? Math.max(...trades.map(t => t.pnl)) : 0;
+            const worst = trades.length > 0 ? Math.min(...trades.map(t => t.pnl)) : 0;
+
+            const pnlEl = document.getElementById('stat-total-pnl');
+            if(pnlEl) {
+                pnlEl.innerText = `${totalPnL >= 0 ? '+' : ''}$${totalPnL.toFixed(2)}`;
+                pnlEl.className = `text-3xl font-black tracking-tight ${totalPnL >= 0 ? 'text-limeAccent' : 'text-rose-400'}`;
+            }
+
+            document.getElementById('stat-winrate').innerText = `${winRate}%`;
+            document.getElementById('winrate-bar').style.width = `${winRate}%`;
+            document.getElementById('stat-profit-factor').innerText = profitFactor;
+            document.getElementById('stat-win-loss-count').innerText = `${wins.length}W / ${losses.length}L`;
+            
+            document.getElementById('stat-best-trade').innerText = `+$${best.toFixed(2)}`;
+            document.getElementById('stat-worst-trade').innerText = `$${worst.toFixed(2)}`;
+
+            renderRecentTrades();
+            renderEquityChart();
+        }
+
+        function renderRecentTrades() {
+            const container = document.getElementById('recent-trades-container');
+            if(!container) return;
+            const recent = trades.slice(0, 3);
+
+            if (recent.length === 0) {
+                container.innerHTML = `<div class="text-center py-6 text-xs text-slate-500 bg-cardBg rounded-xl border border-slate-800">Немає угод. Додайте ручно або завантажте CSV.</div>`;
+                return;
+            }
+
+            container.innerHTML = recent.map(t => {
+                const isWin = t.pnl >= 0;
+                return `
+                    <div onclick="openDetailModal('${t.id}')" class="bg-cardBg hover:bg-cardBgHover lime-border p-3 rounded-xl flex items-center justify-between cursor-pointer active:scale-[0.99] transition-all">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-lg ${isWin ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'} flex items-center justify-center font-bold text-xs">
+                                ${t.direction === 'LONG' ? '↑' : '↓'}
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-xs font-bold text-slate-100">${t.symbol}</span>
+                                    <span class="text-[9px] px-1.5 py-0.2 rounded bg-limeAccent/20 text-limeAccent font-bold">${t.exchange || 'Manual'}</span>
+                                </div>
+                                <span class="text-[10px] text-slate-400">${t.strategy}</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs font-extrabold ${isWin ? 'text-emerald-400' : 'text-rose-400'} block">${isWin ? '+' : ''}$${t.pnl.toFixed(2)}</span>
+                            <span class="text-[9px] text-slate-400">${t.leverage || 1}x</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderTradeLog() {
+            const container = document.getElementById('trades-list-container');
+            if(!container) return;
+            const search = (document.getElementById('filter-search')?.value || '').toLowerCase();
+            const exchange = document.getElementById('filter-exchange')?.value || 'ALL';
+            const dir = document.getElementById('filter-dir')?.value || 'ALL';
+            const status = document.getElementById('filter-status')?.value || 'ALL';
+
+            const filtered = trades.filter(t => {
+                const matchesSearch = t.symbol.toLowerCase().includes(search) || (t.notes && t.notes.toLowerCase().includes(search));
+                const matchesEx = exchange === 'ALL' || (t.exchange || 'Manual') === exchange;
+                const matchesDir = dir === 'ALL' || t.direction === dir;
+                const matchesStatus = status === 'ALL' || (status === 'WIN' ? t.pnl >= 0 : t.pnl < 0);
+                return matchesSearch && matchesEx && matchesDir && matchesStatus;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="text-center py-10 text-xs text-slate-500 bg-cardBg rounded-xl border border-slate-800">Угод не знайдено.</div>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map(t => {
+                const isWin = t.pnl >= 0;
+                const dateStr = new Date(t.date).toLocaleString('uk-UA', { dateStyle: 'short', timeStyle: 'short' });
+                return `
+                    <div onclick="openDetailModal('${t.id}')" class="bg-cardBg hover:bg-cardBgHover lime-border p-3 rounded-xl flex items-center justify-between cursor-pointer active:scale-[0.99] transition-all">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-9 h-9 rounded-lg ${isWin ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'} flex items-center justify-center font-bold text-xs">
+                                ${t.direction}
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-xs font-bold text-slate-100">${t.symbol}</span>
+                                    <span class="text-[9px] px-1.5 py-0.2 rounded bg-limeAccent/20 text-limeAccent font-bold">${t.exchange || 'Manual'}</span>
+                                </div>
+                                <span class="text-[10px] text-slate-400">${dateStr} • ${t.strategy}</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs font-black ${isWin ? 'text-emerald-400' : 'text-rose-400'} block">${isWin ? '+' : ''}$${t.pnl.toFixed(2)}</span>
+                            <span class="text-[9px] text-slate-400">Exit: ${t.exit}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Data-driven local mentor. This is transparent statistical analysis, not a remote LLM call.
+        function runAiAnalysis() {
+            triggerHaptic('medium');
+            const resultBox=document.getElementById('ai-result-box');
+            const contentEl=document.getElementById('ai-content-text');
+            resultBox.classList.remove('hidden');
+            const data=[...trades].filter(t=>Number.isFinite(Number(t.pnl))).sort((a,b)=>new Date(a.date)-new Date(b.date));
+            if (!data.length) {
+                contentEl.innerHTML='<p>Поки немає достатньо угод для аналізу. Імпортуйте CSV із закритими позиціями або додайте угоди вручну.</p>';
+                return;
+            }
+            const sum=arr=>arr.reduce((a,b)=>a+b,0);
+            const wins=data.filter(t=>t.pnl>0), losses=data.filter(t=>t.pnl<0), breakeven=data.filter(t=>t.pnl===0);
+            const total=sum(data.map(t=>t.pnl)), grossWin=sum(wins.map(t=>t.pnl)), grossLoss=Math.abs(sum(losses.map(t=>t.pnl)));
+            const wr=wins.length/data.length*100, avgWin=wins.length?grossWin/wins.length:0, avgLoss=losses.length?grossLoss/losses.length:0;
+            const pf=grossLoss?grossWin/grossLoss:(grossWin?Infinity:0);
+            const avg=sum(data.map(t=>t.pnl))/data.length;
+            const highLev=data.filter(t=>Number(t.leverage)>20);
+            const fomo=data.filter(t=>/fomo|revenge|помст|месть/i.test(t.emotion||''));
+            const byStrategy={};
+            data.forEach(t=>{const k=t.strategy||'Unspecified';(byStrategy[k] ||= []).push(t.pnl);});
+            const strategyRows=Object.entries(byStrategy).map(([k,v])=>({k,n:v.length,pnl:sum(v),wr:v.filter(x=>x>0).length/v.length*100})).sort((a,b)=>b.pnl-a.pnl);
+            let peak=0, equity=0,maxDD=0;
+            data.forEach(t=>{equity+=Number(t.pnl);peak=Math.max(peak,equity);maxDD=Math.max(maxDD,peak-equity);});
+            const fmt=n=>(n<0?'−':'')+'$'+Math.abs(n).toFixed(2);
+            const insights=[];
+            if(total>0) insights.push(`Сумарний результат позитивний (${fmt(total)}), але це не гарантує повторення результату.`);
+            else if(total<0) insights.push(`Сумарний результат від’ємний (${fmt(total)}). Перевірте найбільші збитки й дотримання стопів.`);
+            else insights.push('Сумарний P&L близький до нуля: перевірте, чи покриває система комісії та funding.');
+            if(wr<40) insights.push(`Win rate ${wr.toFixed(1)}% низький. Перевірте якість входів і співвідношення середнього прибутку до збитку (${avgLoss? (avgWin/avgLoss).toFixed(2):'—'}:1).`);
+            else if(wr>=60) insights.push(`Win rate ${wr.toFixed(1)}% високий; переконайтеся, що його не нівелюють рідкісні великі збитки.`);
+            else insights.push(`Win rate ${wr.toFixed(1)}% сам по собі не визначає перевагу — оцінюйте його разом із середнім win/loss.`);
+            if(pf<1) insights.push(`Profit factor ${Number.isFinite(pf)?pf.toFixed(2):'∞'} нижче 1: валові збитки перевищують валові прибутки.`);
+            else insights.push(`Profit factor ${Number.isFinite(pf)?pf.toFixed(2):'∞'}; значення вище 1 означає, що валові прибутки перевищують валові збитки до інших витрат.`);
+            if(highLev.length) insights.push(`${highLev.length} угод (${(highLev.length/data.length*100).toFixed(1)}%) мають плече понад 20x. Плече збільшує чутливість позиції, тож перевірте ризик у грошах, а не лише розмір плеча.`);
+            if(fomo.length) insights.push(`${fomo.length} угод позначено FOMO/помстою. Порівняйте їхній P&L з рештою угод перед висновком про поведінковий патерн.`);
+            const worst=[...data].sort((a,b)=>a.pnl-b.pnl).slice(0,3);
+            const bestStrategy=strategyRows[0], worstStrategy=[...strategyRows].sort((a,b)=>a.pnl-b.pnl)[0];
+            const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+            contentEl.innerHTML=`
+              <p class="text-[10px] text-slate-400">Локальний статистичний аудит на основі ${data.length} угод. Це не підключена GPT-модель і не фінансова порада.</p>
+              <div class="grid grid-cols-2 gap-2">
+                <div class="rounded-lg bg-bgDark p-2"><div class="text-slate-400">Net P&amp;L</div><b class="${total>=0?'text-emerald-400':'text-rose-400'}">${fmt(total)}</b></div>
+                <div class="rounded-lg bg-bgDark p-2"><div class="text-slate-400">Win rate</div><b>${wr.toFixed(1)}%</b></div>
+                <div class="rounded-lg bg-bgDark p-2"><div class="text-slate-400">Profit factor</div><b>${Number.isFinite(pf)?pf.toFixed(2):'∞'}</b></div>
+                <div class="rounded-lg bg-bgDark p-2"><div class="text-slate-400">Max drawdown (trade sequence)</div><b class="text-rose-300">${fmt(maxDD)}</b></div>
+                <div class="rounded-lg bg-bgDark p-2"><div class="text-slate-400">Avg trade</div><b>${fmt(avg)}</b></div>
+                <div class="rounded-lg bg-bgDark p-2"><div class="text-slate-400">Wins / Losses / Flat</div><b>${wins.length} / ${losses.length} / ${breakeven.length}</b></div>
+              </div>
+              <h4 class="font-bold text-limeAccent pt-2">Що показують дані</h4>
+              <ul class="list-disc pl-4 space-y-1">${insights.map(x=>`<li>${safe(x)}</li>`).join('')}</ul>
+              <h4 class="font-bold text-limeAccent pt-2">Стратегії за результатом</h4>
+              <ul class="space-y-1">${strategyRows.slice(0,5).map(x=>`<li>${safe(x.k)}: ${fmt(x.pnl)} · ${x.n} угод · WR ${x.wr.toFixed(1)}%</li>`).join('')}</ul>
+              <h4 class="font-bold text-limeAccent pt-2">Найбільші збитки</h4>
+              <ul class="space-y-1">${worst.map(t=>`<li>${safe(t.symbol)} (${safe(t.date||'без дати')}): <b class="text-rose-300">${fmt(Number(t.pnl))}</b> · ${safe(t.exchange||'Manual')}</li>`).join('')}</ul>
+              <p class="text-slate-400 pt-2">Наступний крок: додайте до кожної угоди плановий ризик, комісії, funding і причину входу. Без цих полів оцінка expectancy та якості виконання буде неповною.</p>`;
+            triggerHaptic('success');
+        }
+
+        // Charts Engine
+        function renderEquityChart() {
+            const chartCanvas = document.getElementById('equityChart');
+            if (!chartCanvas || typeof Chart === 'undefined') return;
+            const ctx = chartCanvas.getContext('2d');
+            const sorted = [...trades].sort((a,b) => new Date(a.date) - new Date(b.date));
+
+            let runningPnL = 0;
+            const labels = ['0'];
+            const data = [0];
+
+            sorted.forEach(t => {
+                runningPnL += t.pnl;
+                labels.push(new Date(t.date).toLocaleDateString('uk-UA', { month: 'numeric', day: 'numeric' }));
+                data.push(runningPnL);
+            });
+
+            if (equityChartInstance) equityChartInstance.destroy();
+
+            const gradient = ctx.createLinearGradient(0, 0, 0, 180);
+            gradient.addColorStop(0, 'rgba(173, 255, 47, 0.35)');
+            gradient.addColorStop(1, 'rgba(173, 255, 47, 0.0)');
+
+            equityChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        borderColor: '#ADFF2F',
+                        borderWidth: 2,
+                        backgroundColor: gradient,
+                        fill: true,
+                        tension: 0.3,
+                        pointBackgroundColor: '#ADFF2F',
+                        pointRadius: 2.5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: '#94a3b8' } },
+                        y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' } }
+                    }
+                }
+            });
+        }
+
+        function renderAnalyticsCharts() {
+            if (typeof Chart === 'undefined') return;
+            
+            const exCtx = document.getElementById('exchangeChart')?.getContext('2d');
+            if (exCtx) {
+                const exData = {};
+                trades.forEach(t => {
+                    const ex = t.exchange || 'Manual';
+                    if (!exData[ex]) exData[ex] = 0;
+                    exData[ex] += t.pnl;
+                });
+
+                if (exchangeChartInstance) exchangeChartInstance.destroy();
+                exchangeChartInstance = new Chart(exCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(exData).length ? Object.keys(exData) : ['N/A'],
+                        datasets: [{
+                            data: Object.values(exData).length ? Object.values(exData) : [0],
+                            backgroundColor: '#ADFF2F',
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' } },
+                            x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+                        }
+                    }
+                });
+            }
+
+            const stratCtx = document.getElementById('strategyChart')?.getContext('2d');
+            if (stratCtx) {
+                const stratData = {};
+                trades.forEach(t => {
+                    if (!stratData[t.strategy]) stratData[t.strategy] = { wins: 0, total: 0 };
+                    stratData[t.strategy].total++;
+                    if (t.pnl > 0) stratData[t.strategy].wins++;
+                });
+
+                const stratLabels = Object.keys(stratData);
+                const stratWR = stratLabels.map(s => ((stratData[s].wins / stratData[s].total) * 100).toFixed(1));
+
+                if (strategyChartInstance) strategyChartInstance.destroy();
+                strategyChartInstance = new Chart(stratCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: stratLabels.length ? stratLabels : ['N/A'],
+                        datasets: [{
+                            data: stratWR.length ? stratWR : [0],
+                            backgroundColor: '#38bdf8',
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { min: 0, max: 100, grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' } },
+                            x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+                        }
+                    }
+                });
+            }
+
+            const emoCtx = document.getElementById('emotionChart')?.getContext('2d');
+            if (emoCtx) {
+                const emoData = {};
+                trades.forEach(t => {
+                    if (!emoData[t.emotion]) emoData[t.emotion] = 0;
+                    emoData[t.emotion] += t.pnl;
+                });
+
+                const emoLabels = Object.keys(emoData);
+                const emoVals = Object.values(emoData);
+                const emoColors = emoVals.map(v => v >= 0 ? '#10b981' : '#f43f5e');
+
+                if (emotionChartInstance) emotionChartInstance.destroy();
+                emotionChartInstance = new Chart(emoCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: emoLabels.length ? emoLabels : ['N/A'],
+                        datasets: [{
+                            data: emoVals.length ? emoVals : [0],
+                            backgroundColor: emoColors.length ? emoColors : ['#10b981'],
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' } },
+                            x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+                        }
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>
