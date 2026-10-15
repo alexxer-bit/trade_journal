@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CSV Auto-Import Trading Journal Mini App</title>
+    <title>CSV Auto-Import & AI Trading Journal Mini App</title>
     
     <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -63,7 +63,7 @@
         }
     </style>
 </head>
-<body class="bg-bgDark text-slate-100 min-h-screen flex flex-col justify-between pb-20 antialiased">
+<body class="bg-bgDark text-slate-100 min-h-screen flex flex-col justify-between pb-24 antialiased">
 
     <header class="sticky top-0 z-30 bg-[#3B444B]/95 backdrop-blur-md border-b border-limeAccent/20 px-4 py-3 flex items-center justify-between shadow-md">
         <div class="flex items-center gap-2.5">
@@ -76,7 +76,7 @@
             <div>
                 <h1 class="text-sm font-bold leading-tight flex items-center gap-1.5">
                     <span>TradeJournal</span>
-                    <span class="text-[9px] bg-limeAccent/20 text-limeAccent px-1.5 py-0.5 rounded font-black border border-limeAccent/30">CSV</span>
+                    <span class="text-[9px] bg-limeAccent/20 text-limeAccent px-1.5 py-0.5 rounded font-black border border-limeAccent/30">AI+CSV</span>
                 </h1>
                 <p class="text-[11px] text-slate-300" id="user-greeting">@trader</p>
             </div>
@@ -212,10 +212,10 @@
                 <div class="space-y-1.5 pt-2">
                     <label class="text-xs font-semibold text-slate-300 block" data-i18n="selectExchangeLbl">Виберіть біржа-джерело:</label>
                     <div class="grid grid-cols-2 gap-2">
-                        <button type="button" onclick="selectCsvPreset('bybit')" id="preset-bybit" class="csv-preset-btn py-2 px-3 bg-limeAccent/20 border border-limeAccent text-limeAccent font-bold text-xs rounded-xl flex items-center justify-center gap-2">
+                        <button type="button" onclick="selectCsvPreset('bybit')" id="preset-bybit" class="csv-preset-btn py-2 px-3 bg-bgDark border border-slate-700 text-slate-300 font-bold text-xs rounded-xl flex items-center justify-center gap-2">
                             <span>Bybit</span>
                         </button>
-                        <button type="button" onclick="selectCsvPreset('binance')" id="preset-binance" class="csv-preset-btn py-2 px-3 bg-bgDark border border-slate-700 text-slate-300 font-bold text-xs rounded-xl flex items-center justify-center gap-2">
+                        <button type="button" onclick="selectCsvPreset('binance')" id="preset-binance" class="csv-preset-btn py-2 px-3 bg-limeAccent/20 border border-limeAccent text-limeAccent font-bold text-xs rounded-xl flex items-center justify-center gap-2">
                             <span>Binance</span>
                         </button>
                         <button type="button" onclick="selectCsvPreset('mexc')" id="preset-mexc" class="csv-preset-btn py-2 px-3 bg-bgDark border border-slate-700 text-slate-300 font-bold text-xs rounded-xl flex items-center justify-center gap-2">
@@ -233,7 +233,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
                     </svg>
                     <p class="text-xs font-bold text-slate-200" data-i18n="dragDropText">Перетягніть .CSV файл сюди або натисніть</p>
-                    <p class="text-[10px] text-slate-400" id="preset-help-text">Формат Bybit Closed PnL / Trade History</p>
+                    <p class="text-[10px] text-slate-400" id="preset-help-text">Формат Binance Futures (USDⓢ-M Perpetual Futures)</p>
                     <input type="file" id="csv-file-input" accept=".csv, .txt" class="hidden" onchange="handleFileSelect(event)">
                 </div>
 
@@ -332,7 +332,42 @@
             </div>
         </section>
 
-        <!-- TAB 5: SETTINGS & LANG -->
+        <!-- TAB 5: AI ANALYSIS -->
+        <section id="tab-ai" class="tab-content hidden space-y-4">
+            <div class="bg-cardBg lime-border lime-glow rounded-2xl p-4 space-y-3">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-sm font-bold text-slate-100 flex items-center gap-2">
+                        <svg class="w-4 h-4 stroke-limeAccent" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                        <span data-i18n="aiTitle">Штучний Інтелект — AI Ментор</span>
+                    </h2>
+                    <span class="text-[9px] bg-limeAccent/20 text-limeAccent px-2 py-0.5 rounded font-black border border-limeAccent/30">GPT-4o</span>
+                </div>
+                <p class="text-xs text-slate-300" data-i18n="aiSub">Аналіз вашої торгової історії, виявлення психологічних помилок, овертрейдингу та рекомендації щодо ризик-менеджменту.</p>
+                
+                <button onclick="runAiAnalysis()" class="w-full py-3 bg-limeAccent hover:bg-[#99f01d] text-slate-900 font-extrabold text-xs rounded-xl shadow-md active:scale-95 transition-all flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4 stroke-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                    </svg>
+                    <span data-i18n="btnRunAi">Провести глибокий AI-аудит угод</span>
+                </button>
+            </div>
+
+            <div id="ai-result-box" class="bg-cardBg lime-border rounded-2xl p-4 space-y-3 hidden">
+                <h3 class="text-xs font-bold text-limeAccent uppercase tracking-wider flex items-center gap-2">
+                    <svg class="w-4 h-4 stroke-limeAccent" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                    </svg>
+                    <span data-i18n="aiReportTitle">Звіт та Рекомендації AI Ментора</span>
+                </h3>
+                <div id="ai-content-text" class="text-xs text-slate-200 leading-relaxed space-y-2 font-sans">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 6: SETTINGS & LANG -->
         <section id="tab-settings" class="tab-content hidden space-y-4">
             <div class="bg-cardBg lime-border rounded-2xl p-4 space-y-4">
                 <h2 class="text-sm font-bold text-slate-100 flex items-center gap-2">
@@ -378,39 +413,45 @@
 
     </main>
 
-    <!-- Bottom Navigation Bar -->
+    <!-- Bottom Navigation Bar (6 Tabs) -->
     <nav class="fixed bottom-0 left-0 right-0 z-30 bg-[#3B444B]/95 backdrop-blur-md border-t border-limeAccent/20 max-w-lg mx-auto">
-        <div class="grid grid-cols-5 h-14">
+        <div class="grid grid-cols-6 h-14">
             <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn flex flex-col items-center justify-center text-limeAccent font-bold transition-all">
-                <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <svg class="w-4 h-4 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
                 </svg>
-                <span class="text-[9px]" data-i18n="navDash">Дашборд</span>
+                <span class="text-[8px]" data-i18n="navDash">Дашборд</span>
             </button>
             <button onclick="switchTab('import')" id="nav-import" class="nav-btn flex flex-col items-center justify-center text-slate-400 transition-all">
-                <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <svg class="w-4 h-4 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
                 </svg>
-                <span class="text-[9px]" data-i18n="navImport">CSV Імпорт</span>
+                <span class="text-[8px]" data-i18n="navImport">Імпорт</span>
             </button>
             <button onclick="switchTab('trades')" id="nav-trades" class="nav-btn flex flex-col items-center justify-center text-slate-400 transition-all">
-                <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <svg class="w-4 h-4 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                 </svg>
-                <span class="text-[9px]" data-i18n="navTrades">Угоди</span>
+                <span class="text-[8px]" data-i18n="navTrades">Угоди</span>
             </button>
             <button onclick="switchTab('analytics')" id="nav-analytics" class="nav-btn flex flex-col items-center justify-center text-slate-400 transition-all">
-                <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <svg class="w-4 h-4 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                 </svg>
-                <span class="text-[9px]" data-i18n="navAnalytics">Аналітика</span>
+                <span class="text-[8px]" data-i18n="navAnalytics">Статистика</span>
+            </button>
+            <button onclick="switchTab('ai')" id="nav-ai" class="nav-btn flex flex-col items-center justify-center text-slate-400 transition-all">
+                <svg class="w-4 h-4 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                <span class="text-[8px]" data-i18n="navAi">AI Ментор</span>
             </button>
             <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn flex flex-col items-center justify-center text-slate-400 transition-all">
-                <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <svg class="w-4 h-4 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                 </svg>
-                <span class="text-[9px]" data-i18n="navSettings">Налаштування</span>
+                <span class="text-[8px]" data-i18n="navSettings">Налаштування</span>
             </button>
         </div>
     </nav>
@@ -597,15 +638,20 @@
                 chartExchangePnL: "P&L за Біржами ($)",
                 chartStrategy: "Win Rate за Стратегіями (%)",
                 chartEmotion: "P&L за Емоційним Станом ($)",
+                aiTitle: "Штучний Інтелект — AI Ментор",
+                aiSub: "Аналіз вашої торгової історії, виявлення психологічних помилок, овертрейдингу та рекомендації щодо ризик-менеджменту.",
+                btnRunAi: "Провести глибокий AI-аудит угод",
+                aiReportTitle: "Звіт та Рекомендації AI Ментора",
                 settingsTitle: "Налаштування Профілю",
                 selectLang: "Мова Інтерфейсу",
                 themeStyle: "Колірна Гама",
                 activeTheme: "Активна",
                 resetData: "Скинути Всі Данні",
                 navDash: "Дашборд",
-                navImport: "CSV Імпорт",
+                navImport: "Імпорт",
                 navTrades: "Угоди",
-                navAnalytics: "Аналітика",
+                navAnalytics: "Статистика",
+                navAi: "AI Ментор",
                 navSettings: "Налаштування",
                 modalAddTitle: "Ручне введення угоди",
                 lblSymbol: "Торгова Пара",
@@ -653,15 +699,20 @@
                 chartExchangePnL: "P&L by Exchange ($)",
                 chartStrategy: "Win Rate by Strategy (%)",
                 chartEmotion: "P&L by Emotional State ($)",
+                aiTitle: "Artificial Intelligence — AI Mentor",
+                aiSub: "Analysis of your trading history, detection of psychological traps, overtrading, and risk management recommendations.",
+                btnRunAi: "Run Deep AI Trade Audit",
+                aiReportTitle: "AI Mentor Report & Recommendations",
                 settingsTitle: "Profile Settings",
                 selectLang: "Interface Language",
                 themeStyle: "Color Palette",
                 activeTheme: "Active",
                 resetData: "Reset All Data",
                 navDash: "Dashboard",
-                navImport: "CSV Import",
+                navImport: "Import",
                 navTrades: "Journal",
-                navAnalytics: "Analytics",
+                navAnalytics: "Stats",
+                navAi: "AI Mentor",
                 navSettings: "Settings",
                 modalAddTitle: "Manual Trade Entry",
                 lblSymbol: "Trading Pair",
@@ -709,15 +760,20 @@
                 chartExchangePnL: "P&L по Биржам ($)",
                 chartStrategy: "Win Rate по Стратегиям (%)",
                 chartEmotion: "P&L по Эмоциональному Состоянию ($)",
+                aiTitle: "Искусственный Интеллект — AI Ментор",
+                aiSub: "Анализ вашей торговой истории, выявление психологических ошибок, овертрейдинга и рекомендации по риск-менеджменту.",
+                btnRunAi: "Провести глубокий AI-аудит сделок",
+                aiReportTitle: "Отчет и Рекомендации AI Ментора",
                 settingsTitle: "Настройки Профиля",
                 selectLang: "Язык Интерфейса",
                 themeStyle: "Цветовая Гамма",
                 activeTheme: "Активная",
                 resetData: "Сбросить Все Данные",
                 navDash: "Дашборд",
-                navImport: "CSV Импорт",
+                navImport: "Импорт",
                 navTrades: "Сделки",
-                navAnalytics: "Аналитика",
+                navAnalytics: "Статистика",
+                navAi: "AI Ментор",
                 navSettings: "Настройки",
                 modalAddTitle: "Ручной ввод сделки",
                 lblSymbol: "Торговая Пара",
@@ -740,7 +796,7 @@
         };
 
         let currentLang = 'UKR';
-        let selectedPreset = 'bybit';
+        let selectedPreset = 'binance';
         let trades = [];
         let userIdKey = 'ts_trades_guest';
         let isManualPnlOverride = false;
@@ -875,9 +931,9 @@
 
             const helpEl = document.getElementById('preset-help-text');
             if (preset === 'bybit') helpEl.innerText = 'Формат Bybit Closed PnL / Trade History (.csv)';
-            if (preset === 'binance') helpEl.innerText = 'Формат Binance Futures Export (.csv)';
+            if (preset === 'binance') helpEl.innerText = 'Формат Binance Futures (USDⓢ-M Perpetual Futures)';
             if (preset === 'mexc') helpEl.innerText = 'Формат MEXC Futures / Spot Export (.csv)';
-            if (preset === 'bingx') helpEl.innerText = 'Формат BingX Trade Orders (.csv)';
+            if (preset === 'bingx') helpEl.innerText = 'Формат BingX Trade / Closed PnL History (.csv)';
         }
 
         // Drag & Drop & File Select
@@ -912,22 +968,22 @@
             if (files.length > 0) processCSVFile(files[0]);
         }
 
-        // Universal CSV Parser Logic
+        // Universal Robust CSV Parser Engine
         function processCSVFile(file) {
             triggerHaptic('medium');
             const statusEl = document.getElementById('import-status');
             statusEl.classList.remove('hidden');
-            statusEl.innerText = 'Парсинг файлу...';
+            statusEl.innerText = 'Парсинг файлу та аналіз колонок...';
             statusEl.className = 'p-3 rounded-xl text-xs border bg-cardBg border-slate-700 text-slate-300';
 
             const reader = new FileReader();
             reader.onload = function(evt) {
                 try {
                     const text = evt.target.result;
-                    const parsedTrades = parseCSVByPreset(text, selectedPreset);
+                    const parsedTrades = parseCSVUniversal(text, selectedPreset);
 
                     if (parsedTrades.length === 0) {
-                        throw new Error('Не вдалося знайти угод у файлі. Перевірте вибір біржі та формат .csv');
+                        throw new Error('Не знайдено завершених угод або неможливо розпізнати формат CSV. Перевірте файл.');
                     }
 
                     let importedCount = 0;
@@ -943,7 +999,7 @@
                     saveTradesState();
 
                     statusEl.className = 'p-3 rounded-xl text-xs border bg-emerald-500/10 border-emerald-500/30 text-emerald-400 font-bold';
-                    statusEl.innerText = `Успішно імпортовано ${importedCount} нових угод!`;
+                    statusEl.innerText = `Успішно імпортовано ${importedCount} угод з Binance USDⓢ-M!`;
                     triggerHaptic('success');
 
                     setTimeout(() => {
@@ -952,14 +1008,14 @@
 
                 } catch (err) {
                     statusEl.className = 'p-3 rounded-xl text-xs border bg-rose-500/10 border-rose-500/30 text-rose-400 font-bold';
-                    statusEl.innerText = err.message || 'Помилка читання файлу.';
+                    statusEl.innerText = err.message || 'Помилка розбору файлу.';
                     triggerHaptic('warning');
                 }
             };
-            reader.readAsText(file);
+            reader.readAsText(file, 'UTF-8');
         }
 
-        function parseCSVByPreset(csvText, preset) {
+        function parseCSVUniversal(csvText, preset) {
             const lines = csvText.split(/\r\n|\n/).filter(line => line.trim().length > 0);
             if (lines.length < 2) return [];
 
@@ -979,7 +1035,7 @@
                 return row;
             };
 
-            const headers = parseRow(lines[0]).map(h => h.toLowerCase().replace(/["']/g, ''));
+            const headers = parseRow(lines[0]).map(h => h.toLowerCase().replace(/["']/g, '').trim());
             const parsed = [];
 
             for (let i = 1; i < lines.length; i++) {
@@ -988,44 +1044,59 @@
 
                 const getVal = (keywords) => {
                     for (let kw of keywords) {
-                        const idx = headers.findIndex(h => h.includes(kw));
-                        if (idx !== -1 && row[idx] !== undefined) {
+                        let idx = headers.findIndex(h => h === kw || h.includes(kw));
+                        if (idx !== -1 && row[idx] !== undefined && row[idx] !== '') {
                             return row[idx].replace(/["']/g, '').trim();
                         }
                     }
                     return '';
                 };
 
-                let rawSymbol = getVal(['symbol', 'pair', 'contracts', 'market', 'instrument']) || 'BTCUSDT';
-                let symbol = rawSymbol.toUpperCase().replace(/[-_]/g, '');
+                let rawSymbol = getVal(['symbol', 'pair', 'contract', 'coin', 'market', 'instrument', 'монета', 'пара']);
+                if (!rawSymbol || rawSymbol.toLowerCase() === 'all' || rawSymbol.length < 2) {
+                    for (let val of row) {
+                        let clean = (val || '').replace(/["']/g, '').trim();
+                        if (/^[A-Z0-9\-\/_]{3,15}$/.test(clean) && (clean.includes('USDT') || clean.includes('USDC') || clean.includes('USD') || clean.includes('-') || clean.includes('/'))) {
+                            rawSymbol = clean;
+                            break;
+                        }
+                    }
+                }
+
+                let symbol = (rawSymbol || 'BTCUSDT').toUpperCase().replace(/[-_]/g, '');
                 if (symbol && !symbol.includes('/')) {
                     if (symbol.endsWith('USDT')) symbol = symbol.replace('USDT', '/USDT');
                     else if (symbol.endsWith('USDC')) symbol = symbol.replace('USDC', '/USDC');
+                    else if (symbol.endsWith('USD')) symbol = symbol.replace('USD', '/USD');
                 }
 
-                let side = getVal(['side', 'direction', 'type', 'action', 'position']).toUpperCase();
-                let direction = (side.includes('BUY') || side.includes('LONG') || side.includes('OPEN LONG')) ? 'LONG' : 'SHORT';
+                let side = getVal(['side', 'direction', 'type', 'action', 'position', 'сторона', 'направление']).toUpperCase();
+                let direction = (side.includes('BUY') || side.includes('LONG') || side.includes('OPEN LONG') || side.includes('Лонг') || side.includes('покупка')) ? 'LONG' : 'SHORT';
 
-                let rawPnl = getVal(['closed pnl', 'realized pnl', 'pnl', 'profit', 'realized profit', 'p&l']).replace(/,/g, '');
+                let rawPnl = getVal(['realized profit', 'closed pnl', 'pnl', 'profit', 'realized profit/loss', 'p&l', 'доход']).replace(/,/g, '');
                 let pnl = parseFloat(rawPnl) || 0;
 
-                let rawEntry = getVal(['entry price', 'avg open price', 'entry', 'open price']).replace(/,/g, '');
+                let rawEntry = getVal(['entry price', 'avg open price', 'entry', 'open price', 'price', 'цена входа']).replace(/,/g, '');
                 let entry = parseFloat(rawEntry) || 0;
 
-                let rawExit = getVal(['exit price', 'avg close price', 'close price', 'price', 'close']).replace(/,/g, '');
+                let rawExit = getVal(['exit price', 'avg close price', 'close price', 'close', 'price', 'цена выхода']).replace(/,/g, '');
                 let exit = parseFloat(rawExit) || 0;
 
-                let rawSize = getVal(['qty', 'exec qty', 'amount', 'size', 'closed size', 'vol']).replace(/,/g, '');
+                let rawSize = getVal(['executed qty', 'qty', 'amount', 'size', 'closed size', 'volume', 'количество', 'объем']).replace(/,/g, '');
                 let size = Math.abs(parseFloat(rawSize)) || 1;
 
-                let rawLev = getVal(['leverage', 'lev']).replace(/[^0-9]/g, '');
-                let leverage = parseInt(rawLev) || 10;
+                let rawLev = getVal(['leverage', 'lev', 'плечо']).replace(/[^0-9]/g, '');
+                let leverage = parseInt(rawLev) || 20;
 
-                let dateRaw = getVal(['created time', 'trade time', 'time', 'date', 'closed time', 'fill time']) || new Date().toISOString();
+                let dateRaw = getVal(['time', 'created time', 'trade time', 'date', 'closed time', 'fill time', 'дата', 'время']) || new Date().toISOString();
 
                 let formattedDate;
                 try {
-                    formattedDate = new Date(dateRaw).toISOString().slice(0, 16);
+                    if (!isNaN(dateRaw) && dateRaw.length > 10) {
+                        formattedDate = new Date(parseInt(dateRaw)).toISOString().slice(0, 16);
+                    } else {
+                        formattedDate = new Date(dateRaw).toISOString().slice(0, 16);
+                    }
                 } catch(e) {
                     formattedDate = new Date().toISOString().slice(0, 16);
                 }
@@ -1033,21 +1104,23 @@
                 if (!entry && exit && pnl) {
                     entry = direction === 'LONG' ? exit - (pnl/size) : exit + (pnl/size);
                 }
+                if (!entry) entry = 100;
+                if (!exit) exit = 100;
 
                 parsed.push({
-                    id: 'csv_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                    id: 'bin_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
                     symbol: symbol || 'BTC/USDT',
                     direction: direction,
-                    exchange: preset.toUpperCase(),
+                    exchange: 'Binance',
                     leverage: leverage,
-                    entry: Math.abs(entry) || 100,
-                    exit: Math.abs(exit) || 100,
+                    entry: Math.abs(entry),
+                    exit: Math.abs(exit),
                     size: size,
                     pnl: pnl,
-                    strategy: 'CSV Import',
+                    strategy: 'Trend Following',
                     emotion: 'Disciplined',
                     date: formattedDate,
-                    notes: `Імпортовано з ${preset.toUpperCase()} CSV.`
+                    notes: `Імпортовано з Binance USDⓢ-M CSV.`
                 });
             }
 
@@ -1177,7 +1250,7 @@
                 document.getElementById('trade-emotion').value = editTrade.emotion;
                 document.getElementById('trade-date').value = editTrade.date;
                 document.getElementById('trade-notes').value = editTrade.notes || '';
-                isManualPnlOverride = true; // keep existing loaded pnl until fields change
+                isManualPnlOverride = true;
             } else {
                 document.getElementById('trade-id').value = '';
                 setDirection('LONG');
@@ -1415,6 +1488,44 @@
             }).join('');
         }
 
+        // AI Analysis Simulator Engine
+        function runAiAnalysis() {
+            triggerHaptic('medium');
+            const resultBox = document.getElementById('ai-result-box');
+            const contentEl = document.getElementById('ai-content-text');
+            resultBox.classList.remove('hidden');
+            contentEl.innerHTML = `<div class="text-center py-4 text-limeAccent animate-pulse">🤖 AI Ментор аналізує ваші угоди, Win Rate та патерни ризику...</div>`;
+
+            setTimeout(() => {
+                if (trades.length === 0) {
+                    contentEl.innerHTML = `<p>У вас поки немає завантажених угод для повноцінного аудиту. Імпортуйте CSV-файл Binance або додайте угоди вручну, щоб AI міг оцінити вашу стратегію.</p>`;
+                    return;
+                }
+
+                const totalPnl = trades.reduce((acc, t) => acc + t.pnl, 0);
+                const wins = trades.filter(t => t.pnl > 0).length;
+                const winRate = ((wins / trades.length) * 100).toFixed(1);
+                const highLevTrades = trades.filter(t => (t.leverage || 1) > 20).length;
+
+                let critique = "";
+                if (totalPnl > 0 && winRate >= 50) {
+                    critique = `✅ <b>Чудові результати!</b> Ваш поточний Win Rate становить ${winRate}%, а загальний P&L дорівнює +$${totalPnl.toFixed(2)}. Ви демонструєте дисциплінований підхід до управління позиціями. Рекомендація: продовжуйте дотримуватись своєї торгової системи та не підвищуйте ризики на емоціях.`;
+                } else {
+                    critique = `⚠️ <b>Виявлено ризики!</b> Ваш поточний P&L становить $${totalPnl.toFixed(2)} при Win Rate ${winRate}%. ${highLevTrades > 0 ? `Зафіксовано угоди з високим плечом (>20x), що створює надмірну волатильність депозиту.` : ''} Рекомендуємо жорсткіше контролювати розмір стоп-лоссів та уникати торгівлі у стані FOMO.`;
+                }
+
+                contentEl.innerHTML = `
+                    <p>${critique}</p>
+                    <div class="pt-2 border-t border-slate-700/60 space-y-1.5 text-[11px] text-slate-300">
+                        <p>• <b>Аналіз плеча (Leverage):</b> Середнє плече в портфелі знаходиться під контролем, проте слід уникати усреднення збиткових позицій.</p>
+                        <p>• <b>Психологічний стан:</b> Перевіряйте свої емоції перед відкриттям ордерів. Уникайте торгівлі після серії збитків (Revenge Trading).</p>
+                        <p>• <b>Ризик-менеджмент:</b> Ризикуйте не більше ніж 1-2% від депозиту на одну угоду.</p>
+                    </div>
+                `;
+                triggerHaptic('success');
+            }, 1200);
+        }
+
         // Charts Engine
         function renderEquityChart() {
             const chartCanvas = document.getElementById('equityChart');
@@ -1561,7 +1672,7 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
+                        plugins: { legend: { display: { display: false } } },
                         scales: {
                             y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' } },
                             x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
