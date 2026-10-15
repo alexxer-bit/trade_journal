@@ -65,6 +65,35 @@
 </head>
 <body class="bg-bgDark text-slate-100 min-h-screen flex flex-col justify-between pb-24 antialiased">
 
+    <!-- First-run capital setup: shown until the user enters their starting trading capital -->
+    <div id="capital-setup-overlay" class="hidden fixed inset-0 z-[100] bg-[#20262b]/95 backdrop-blur-sm p-5 flex items-center justify-center">
+        <form id="capital-setup-form" onsubmit="submitStartingCapital(event)" class="w-full max-w-sm bg-cardBg border border-limeAccent/40 rounded-2xl p-5 shadow-2xl space-y-4">
+            <div class="w-12 h-12 rounded-xl bg-limeAccent/10 border border-limeAccent/40 flex items-center justify-center text-limeAccent text-2xl font-black">$</div>
+            <div class="flex items-start justify-between gap-3">
+                <div>
+                    <p class="text-[10px] tracking-[0.2em] uppercase text-limeAccent font-bold">TradeJournal</p>
+                    <h2 id="capital-setup-title" class="text-xl font-black mt-1">Почнімо з твого капіталу</h2>
+                </div>
+                <select id="capital-setup-language" onchange="changeLanguage(this.value)" aria-label="Language" class="bg-bgDark border border-limeAccent/30 text-limeAccent text-xs font-bold rounded-lg px-2 py-1.5">
+                    <option value="UKR">🇺🇦 UKR</option>
+                    <option value="EN">🇬🇧 EN</option>
+                    <option value="RU">🏳️ RU</option>
+                </select>
+            </div>
+            <div>
+                <p id="capital-setup-desc" class="text-sm text-slate-300 mt-2">Вкажи суму, яку зараз маєш для трейдингу. Вона стане початковим балансом для розрахунку результатів у журналі.</p>
+            </div>
+            <label id="capital-setup-label" for="starting-capital-input" class="block text-xs font-bold text-slate-300">Доступний капітал (USD)</label>
+            <div class="flex items-center gap-2 bg-bgDark border border-slate-600 focus-within:border-limeAccent rounded-xl px-3">
+                <span class="text-limeAccent font-bold">$</span>
+                <input id="starting-capital-input" type="number" min="0.01" max="1000000000" step="0.01" inputmode="decimal" required placeholder="1000.00" class="w-full bg-transparent py-3 text-lg font-bold text-white outline-none" />
+            </div>
+            <p id="capital-setup-error" class="hidden text-xs text-rose-400"></p>
+            <button id="capital-setup-submit" type="submit" class="w-full rounded-xl bg-limeAccent hover:bg-[#99f01d] text-slate-900 font-black py-3 active:scale-[0.99]">Почати вести журнал</button>
+            <p id="capital-setup-footnote" class="text-[10px] leading-relaxed text-slate-400">Це лише початковий баланс для статистики журналу. Додаток не перевіряє фактичний баланс на біржі.</p>
+        </form>
+    </div>
+
     <header class="sticky top-0 z-30 bg-[#3B444B]/95 backdrop-blur-md border-b border-limeAccent/20 px-4 py-3 flex items-center justify-between shadow-md">
         <div class="flex items-center gap-2.5">
             <!-- Native SVG Logo -->
@@ -138,6 +167,17 @@
                     </div>
                 </div>
                 <div id="stat-total-pnl" class="text-3xl font-black text-limeAccent tracking-tight">$0.00</div>
+                <div class="flex items-center justify-between gap-3 rounded-xl bg-bgDark/80 border border-slate-700/50 px-3 py-2">
+                    <div>
+                        <div id="capital-start-label" class="text-[10px] uppercase tracking-wide text-slate-400">Початковий капітал</div>
+                        <div id="stat-starting-capital" class="text-sm font-bold text-slate-100">$0.00</div>
+                    </div>
+                    <div class="text-right">
+                        <div id="capital-current-label" class="text-[10px] uppercase tracking-wide text-slate-400">Баланс з урахуванням P&amp;L</div>
+                        <div id="stat-current-capital" class="text-sm font-bold text-limeAccent">$0.00</div>
+                    </div>
+                    <button type="button" onclick="openCapitalSetup(true)" id="capital-edit-btn" class="shrink-0 text-[10px] font-bold text-limeAccent border border-limeAccent/30 rounded-lg px-2 py-1.5">Змінити</button>
+                </div>
 
                 <!-- Stats 2x2 Grid -->
                 <div class="grid grid-cols-2 gap-2.5 pt-2 border-t border-slate-700/60">
@@ -799,6 +839,8 @@
         let selectedPreset = 'binance';
         let trades = [];
         let userIdKey = 'ts_trades_guest';
+        let startingCapital = null;
+        let capitalEditMode = false;
         let isManualPnlOverride = false;
 
         // Telegram WebApp Setup
@@ -850,8 +892,13 @@
                 trades = []; 
             }
 
+            const savedCapital = localStorage.getItem(`${userIdKey}_starting_capital`);
+            startingCapital = savedCapital !== null && Number.isFinite(Number(savedCapital)) && Number(savedCapital) > 0
+                ? Number(savedCapital) : null;
+
             updateDashboard();
             renderTradeLog();
+            if (startingCapital === null) openCapitalSetup(false);
         }
 
         function saveTradesState() {
@@ -860,6 +907,47 @@
             if (tg?.CloudStorage) {
                 tg.CloudStorage.setItem(userIdKey, dataStr);
             }
+        }
+
+        // Starting capital onboarding (stored separately for each Telegram user/browser profile)
+        function openCapitalSetup(edit = false) {
+            capitalEditMode = Boolean(edit);
+            const overlay = document.getElementById('capital-setup-overlay');
+            const input = document.getElementById('starting-capital-input');
+            const title = document.getElementById('capital-setup-title');
+            const desc = document.getElementById('capital-setup-desc');
+            const submit = document.getElementById('capital-setup-submit');
+            const error = document.getElementById('capital-setup-error');
+            if (!overlay || !input) return;
+            input.value = startingCapital !== null ? String(startingCapital) : '';
+            const setupLanguage = document.getElementById('capital-setup-language');
+            if (setupLanguage) setupLanguage.value = currentLang;
+            error.classList.add('hidden');
+            title.textContent = currentLang === 'EN' ? (edit ? 'Update starting capital' : 'Let’s set up your capital') : currentLang === 'RU' ? (edit ? 'Изменить стартовый капитал' : 'Начнём с твоего капитала') : (edit ? 'Зміни початковий капітал' : 'Почнімо з твого капіталу');
+            desc.textContent = currentLang === 'EN' ? 'Enter the amount you currently have available for trading. It will be used as the starting balance for journal performance.' : currentLang === 'RU' ? 'Укажи сумму, доступную для трейдинга. Она станет начальным балансом для расчёта результатов журнала.' : 'Вкажи суму, яку зараз маєш для трейдингу. Вона стане початковим балансом для розрахунку результатів у журналі.';
+            document.getElementById('capital-setup-label').textContent = currentLang === 'EN' ? 'Available capital (USD)' : currentLang === 'RU' ? 'Доступный капитал (USD)' : 'Доступний капітал (USD)';
+            submit.textContent = currentLang === 'EN' ? (edit ? 'Save capital' : 'Start journal') : currentLang === 'RU' ? (edit ? 'Сохранить капитал' : 'Начать вести журнал') : (edit ? 'Зберегти капітал' : 'Почати вести журнал');
+            document.getElementById('capital-setup-footnote').textContent = currentLang === 'EN' ? 'This is only a starting balance for journal statistics. The app does not verify your actual exchange balance.' : currentLang === 'RU' ? 'Это только начальный баланс для статистики журнала. Приложение не проверяет фактический баланс на бирже.' : 'Це лише початковий баланс для статистики журналу. Додаток не перевіряє фактичний баланс на біржі.';
+            overlay.classList.remove('hidden');
+            setTimeout(() => input.focus(), 50);
+        }
+
+        function submitStartingCapital(event) {
+            event.preventDefault();
+            const input = document.getElementById('starting-capital-input');
+            const value = Number(input.value);
+            const error = document.getElementById('capital-setup-error');
+            if (!Number.isFinite(value) || value <= 0 || value > 1000000000) {
+                error.textContent = currentLang === 'EN' ? 'Enter an amount greater than 0 and no more than 1,000,000,000 USD.' : currentLang === 'RU' ? 'Введи сумму больше 0 и не более 1 000 000 000 USD.' : 'Введи суму більше 0 і не більше 1 000 000 000 USD.';
+                error.classList.remove('hidden');
+                return;
+            }
+            startingCapital = Math.round(value * 100) / 100;
+            localStorage.setItem(`${userIdKey}_starting_capital`, String(startingCapital));
+            document.getElementById('capital-setup-overlay').classList.add('hidden');
+            capitalEditMode = false;
+            updateDashboard();
+            triggerHaptic('success');
         }
 
         // Translation Engine
@@ -871,6 +959,8 @@
             updateLanguageUI();
             renderTradeLog();
             updateDashboard();
+            const setupOverlay = document.getElementById('capital-setup-overlay');
+            if (setupOverlay && !setupOverlay.classList.contains('hidden')) openCapitalSetup(capitalEditMode);
         }
 
         function updateLanguageUI() {
@@ -1391,6 +1481,19 @@
             if(pnlEl) {
                 pnlEl.innerText = `${totalPnL >= 0 ? '+' : ''}$${totalPnL.toFixed(2)}`;
                 pnlEl.className = `text-3xl font-black tracking-tight ${totalPnL >= 0 ? 'text-limeAccent' : 'text-rose-400'}`;
+            }
+            const pnlPercentEl = document.getElementById('stat-pnl-percent');
+            if (pnlPercentEl) {
+                const pct = startingCapital > 0 ? (totalPnL / startingCapital) * 100 : 0;
+                pnlPercentEl.textContent = `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`;
+            }
+            const startCapitalEl = document.getElementById('stat-starting-capital');
+            const currentCapitalEl = document.getElementById('stat-current-capital');
+            if (startCapitalEl) startCapitalEl.textContent = startingCapital > 0 ? `$${startingCapital.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '—';
+            if (currentCapitalEl) {
+                const current = startingCapital > 0 ? startingCapital + totalPnL : null;
+                currentCapitalEl.textContent = current !== null ? `$${current.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '—';
+                currentCapitalEl.className = `text-sm font-bold ${current !== null && current >= 0 ? 'text-limeAccent' : 'text-rose-400'}`;
             }
 
             document.getElementById('stat-winrate').innerText = `${winRate}%`;
