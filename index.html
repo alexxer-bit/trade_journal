@@ -13,9 +13,6 @@
     
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <!-- Lucide Icons (CDN) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.js"></script>
 
     <script>
         tailwind.config = {
@@ -68,11 +65,13 @@
 </head>
 <body class="bg-bgDark text-slate-100 min-h-screen flex flex-col justify-between pb-20 antialiased">
 
-    <!-- Top Header -->
     <header class="sticky top-0 z-30 bg-[#3B444B]/95 backdrop-blur-md border-b border-limeAccent/20 px-4 py-3 flex items-center justify-between shadow-md">
         <div class="flex items-center gap-2.5">
+            <!-- Native SVG Logo -->
             <div class="w-9 h-9 rounded-xl bg-limeAccent/10 border border-limeAccent/40 flex items-center justify-center font-bold text-limeAccent shadow-sm">
-                <i data-lucide="file-spreadsheet" class="w-5 h-5 text-limeAccent"></i>
+                <svg class="w-5 h-5 stroke-limeAccent" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
             </div>
             <div>
                 <h1 class="text-sm font-bold leading-tight flex items-center gap-1.5">
@@ -93,13 +92,14 @@
 
             <!-- New Manual Trade Action -->
             <button onclick="openAddModal()" class="flex items-center gap-1 bg-limeAccent hover:bg-[#99f01d] active:scale-95 transition-all text-slate-900 px-3 py-1.5 rounded-lg text-xs font-bold shadow-md shadow-limeAccent/20">
-                <i data-lucide="plus" class="w-4 h-4"></i>
+                <svg class="w-4 h-4 stroke-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                </svg>
                 <span data-i18n="newTrade">Додати</span>
             </button>
         </div>
     </header>
 
-    <!-- Main Content Container -->
     <main class="p-4 flex-1 max-w-lg mx-auto w-full space-y-5">
 
         <!-- TAB 1: DASHBOARD -->
@@ -109,7 +109,9 @@
             <div class="bg-cardBg lime-border rounded-xl p-3 flex items-center justify-between shadow-sm">
                 <div class="flex items-center gap-2.5">
                     <div class="p-2 rounded-lg bg-limeAccent/10 border border-limeAccent/30 text-limeAccent">
-                        <i data-lucide="upload-cloud" class="w-5 h-5"></i>
+                        <svg class="w-5 h-5 stroke-limeAccent" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                        </svg>
                     </div>
                     <div>
                         <h4 class="text-xs font-bold text-slate-200" data-i18n="importBannerTitle">Імпорт з CSV-файлу</h4>
@@ -117,7 +119,9 @@
                     </div>
                 </div>
                 <button onclick="switchTab('import')" class="text-xs font-bold text-slate-900 bg-limeAccent hover:bg-[#9ebd1f] px-3 py-1.5 rounded-md transition-all flex items-center gap-1 active:scale-95 shadow">
-                    <i data-lucide="file-up" class="w-3.5 h-3.5 text-slate-900"></i>
+                    <svg class="w-3.5 h-3.5 stroke-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                    </svg>
                     <span data-i18n="importBtn">Імпорт</span>
                 </button>
             </div>
@@ -127,7 +131,9 @@
                 <div class="flex items-center justify-between">
                     <span class="text-xs text-slate-300 font-semibold uppercase tracking-wider" data-i18n="totalPnl">Загальний P&L</span>
                     <div id="pnl-badge" class="px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                        <i data-lucide="trending-up" class="w-3.5 h-3.5"></i>
+                        <svg class="w-3.5 h-3.5 stroke-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                        </svg>
                         <span id="stat-pnl-percent">+0.0%</span>
                     </div>
                 </div>
@@ -165,7 +171,9 @@
             <div class="bg-cardBg lime-border rounded-2xl p-4 shadow-sm space-y-3">
                 <div class="flex items-center justify-between">
                     <h3 class="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
-                        <i data-lucide="line-chart" class="w-4 h-4 text-limeAccent"></i>
+                        <svg class="w-4 h-4 stroke-limeAccent" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18"/>
+                        </svg>
                         <span data-i18n="equityCurve">Динаміка Балансу (Equity)</span>
                     </h3>
                     <span class="text-[10px] bg-bgDark text-limeAccent px-2 py-0.5 rounded border border-limeAccent/30 font-mono">USD</span>
@@ -191,7 +199,9 @@
         <section id="tab-import" class="tab-content hidden space-y-4">
             <div class="bg-cardBg lime-border rounded-2xl p-4 space-y-3">
                 <div class="flex items-center gap-2">
-                    <i data-lucide="file-up" class="w-5 h-5 text-limeAccent"></i>
+                    <svg class="w-5 h-5 stroke-limeAccent" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                    </svg>
                     <div>
                         <h2 class="text-sm font-bold text-slate-100" data-i18n="csvImportTitle">Авто-Імпорт Угод з CSV</h2>
                         <p class="text-[11px] text-slate-400" data-i18n="csvImportSub">Завантажте експортовану історію торгівлі з вашої біржі.</p>
@@ -219,7 +229,9 @@
 
                 <!-- Drag & Drop Zone -->
                 <div id="drop-zone" onclick="document.getElementById('csv-file-input').click()" class="border-2 border-dashed border-limeAccent/40 bg-bgDark/60 hover:bg-bgDark p-6 rounded-xl text-center space-y-2 cursor-pointer transition-all">
-                    <i data-lucide="upload" class="w-8 h-8 text-limeAccent mx-auto animate-bounce"></i>
+                    <svg class="w-8 h-8 stroke-limeAccent mx-auto animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                    </svg>
                     <p class="text-xs font-bold text-slate-200" data-i18n="dragDropText">Перетягніть .CSV файл сюди або натисніть</p>
                     <p class="text-[10px] text-slate-400" id="preset-help-text">Формат Bybit Closed PnL / Trade History</p>
                     <input type="file" id="csv-file-input" accept=".csv, .txt" class="hidden" onchange="handleFileSelect(event)">
@@ -232,12 +244,16 @@
             <!-- Export / Backup Card -->
             <div class="bg-cardBg lime-border rounded-2xl p-4 space-y-3">
                 <h3 class="text-xs font-bold text-slate-200 flex items-center gap-2">
-                    <i data-lucide="download" class="w-4 h-4 text-limeAccent"></i>
+                    <svg class="w-4 h-4 stroke-limeAccent" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
                     <span data-i18n="exportJournalTitle">Експорт Журналу</span>
                 </h3>
                 <p class="text-[11px] text-slate-400" data-i18n="exportJournalDesc">Збережіть усі свої угоди в універсальний CSV-файл резервної копії.</p>
                 <button onclick="exportToCSV()" class="w-full py-2.5 bg-limeAccent hover:bg-[#99f01d] text-slate-900 font-bold text-xs rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2">
-                    <i data-lucide="file-output" class="w-4 h-4"></i>
+                    <svg class="w-4 h-4 stroke-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
                     <span data-i18n="exportBtn">Завантажити Резервну Копію (.CSV)</span>
                 </button>
             </div>
@@ -248,7 +264,9 @@
             <!-- Filter & Search Panel -->
             <div class="bg-cardBg lime-border rounded-xl p-3 space-y-2.5">
                 <div class="relative">
-                    <i data-lucide="search" class="w-4 h-4 absolute left-3 top-2.5 text-limeAccent"></i>
+                    <svg class="w-4 h-4 stroke-limeAccent absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
                     <input type="text" id="filter-search" data-i18n-ph="searchPlaceholder" placeholder="Пошук тикера або нотаток..." oninput="renderTradeLog()" class="w-full bg-bgDark border border-slate-700/80 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-limeAccent">
                 </div>
                 <div class="grid grid-cols-3 gap-2">
@@ -282,7 +300,10 @@
         <!-- TAB 4: ANALYTICS -->
         <section id="tab-analytics" class="tab-content hidden space-y-4">
             <h2 class="text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
-                <i data-lucide="pie-chart" class="w-4 h-4 text-limeAccent"></i>
+                <svg class="w-4 h-4 stroke-limeAccent" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
+                </svg>
                 <span data-i18n="analyticsTitle">Глибока Аналітика Торгівлі</span>
             </h2>
 
@@ -315,7 +336,10 @@
         <section id="tab-settings" class="tab-content hidden space-y-4">
             <div class="bg-cardBg lime-border rounded-2xl p-4 space-y-4">
                 <h2 class="text-sm font-bold text-slate-100 flex items-center gap-2">
-                    <i data-lucide="settings" class="w-4 h-4 text-limeAccent"></i>
+                    <svg class="w-4 h-4 stroke-limeAccent" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
                     <span data-i18n="settingsTitle">Налаштування Профілю</span>
                 </h2>
 
@@ -342,7 +366,9 @@
 
                     <div class="pt-2 border-t border-slate-700/60 space-y-2">
                         <button onclick="resetAllData()" class="w-full py-2.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            <svg class="w-4 h-4 stroke-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
                             <span data-i18n="resetData">Скинути Всі Данні</span>
                         </button>
                     </div>
@@ -356,23 +382,34 @@
     <nav class="fixed bottom-0 left-0 right-0 z-30 bg-[#3B444B]/95 backdrop-blur-md border-t border-limeAccent/20 max-w-lg mx-auto">
         <div class="grid grid-cols-5 h-14">
             <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn flex flex-col items-center justify-center text-limeAccent font-bold transition-all">
-                <i data-lucide="layout-dashboard" class="w-5 h-5 mb-0.5"></i>
+                <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                </svg>
                 <span class="text-[9px]" data-i18n="navDash">Дашборд</span>
             </button>
             <button onclick="switchTab('import')" id="nav-import" class="nav-btn flex flex-col items-center justify-center text-slate-400 transition-all">
-                <i data-lucide="file-up" class="w-5 h-5 mb-0.5"></i>
+                <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                </svg>
                 <span class="text-[9px]" data-i18n="navImport">CSV Імпорт</span>
             </button>
             <button onclick="switchTab('trades')" id="nav-trades" class="nav-btn flex flex-col items-center justify-center text-slate-400 transition-all">
-                <i data-lucide="list-ordered" class="w-5 h-5 mb-0.5"></i>
+                <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
                 <span class="text-[9px]" data-i18n="navTrades">Угоди</span>
             </button>
             <button onclick="switchTab('analytics')" id="nav-analytics" class="nav-btn flex flex-col items-center justify-center text-slate-400 transition-all">
-                <i data-lucide="bar-chart-3" class="w-5 h-5 mb-0.5"></i>
+                <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
                 <span class="text-[9px]" data-i18n="navAnalytics">Аналітика</span>
             </button>
             <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn flex flex-col items-center justify-center text-slate-400 transition-all">
-                <i data-lucide="settings" class="w-5 h-5 mb-0.5"></i>
+                <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
                 <span class="text-[9px]" data-i18n="navSettings">Налаштування</span>
             </button>
         </div>
@@ -383,11 +420,15 @@
         <div class="bg-bgDark border border-limeAccent/30 rounded-t-2xl sm:rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-5 space-y-4 shadow-2xl">
             <div class="flex items-center justify-between border-b border-slate-700 pb-3">
                 <h3 class="text-sm font-bold text-slate-100 flex items-center gap-2" id="modal-title">
-                    <i data-lucide="plus-circle" class="w-4 h-4 text-limeAccent"></i>
+                    <svg class="w-4 h-4 stroke-limeAccent" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
                     <span data-i18n="modalAddTitle">Ручне введення угоди</span>
                 </h3>
                 <button onclick="closeAddModal()" class="text-slate-400 hover:text-white p-1">
-                    <i data-lucide="x" class="w-5 h-5"></i>
+                    <svg class="w-5 h-5 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
                 </button>
             </div>
 
@@ -498,7 +539,9 @@
                     <span id="detail-exchange-badge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-limeAccent/20 text-limeAccent border border-limeAccent/30">BYBIT</span>
                 </div>
                 <button onclick="closeDetailModal()" class="text-slate-400 hover:text-white p-1">
-                    <i data-lucide="x" class="w-5 h-5"></i>
+                    <svg class="w-5 h-5 stroke-current" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
                 </button>
             </div>
 
@@ -508,11 +551,15 @@
 
             <div class="pt-2 flex gap-2 border-t border-slate-700">
                 <button id="btn-delete-trade" onclick="" class="flex-1 py-2.5 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-400 font-semibold text-xs hover:bg-rose-500/20 active:scale-95 transition-all flex items-center justify-center gap-1.5">
-                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    <svg class="w-4 h-4 stroke-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
                     <span data-i18n="btnDelete">Видалити</span>
                 </button>
                 <button id="btn-edit-trade" onclick="" class="flex-1 py-2.5 rounded-xl bg-cardBg border border-slate-700 text-slate-200 font-semibold text-xs hover:bg-slate-700 active:scale-95 transition-all flex items-center justify-center gap-1.5">
-                    <i data-lucide="edit-3" class="w-4 h-4"></i>
+                    <svg class="w-4 h-4 stroke-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
                     <span data-i18n="btnEdit">Редагувати</span>
                 </button>
             </div>
@@ -694,14 +741,18 @@
 
         let currentLang = 'UKR';
         let selectedPreset = 'bybit';
+        let trades = [];
+        let userIdKey = 'ts_trades_guest';
 
         // Telegram WebApp Setup
         const tg = window.Telegram?.WebApp;
         if (tg) {
             tg.ready();
             tg.expand();
-            if (tg.initDataUnsafe?.user) {
-                document.getElementById('user-greeting').innerText = `@${tg.initDataUnsafe.user.username || tg.initDataUnsafe.user.first_name}`;
+            const user = tg.initDataUnsafe?.user;
+            if (user) {
+                document.getElementById('user-greeting').innerText = `@${user.username || user.first_name}`;
+                userIdKey = `ts_trades_user_${user.id}`;
             }
         }
 
@@ -714,65 +765,43 @@
             }
         }
 
-        // Default Initial Demo Trades
-        const defaultSampleTrades = [
-            { id: 'c1', symbol: 'BTC/USDT', direction: 'LONG', exchange: 'Bybit', leverage: 20, entry: 65200, exit: 67100, size: 0.5, pnl: 950, strategy: 'Smart Money / ICT', emotion: 'Disciplined', date: '2026-10-14T10:15', notes: 'CSV imported trade from Bybit.' },
-            { id: 'c2', symbol: 'ETH/USDT', direction: 'SHORT', exchange: 'Binance', leverage: 10, entry: 3500, exit: 3410, size: 3, pnl: 270, strategy: 'Breakout', emotion: 'Confident', date: '2026-10-13T14:40', notes: 'CSV imported trade from Binance.' },
-            { id: 'c3', symbol: 'SOL/USDT', direction: 'LONG', exchange: 'MEXC', leverage: 15, entry: 155, exit: 148, size: 20, pnl: -140, strategy: 'Scalping', emotion: 'FOMO', date: '2026-10-12T18:00', notes: 'CSV imported trade from MEXC.' }
-        ];
-
-        let trades = [];
-
         // Chart Instances
         let equityChartInstance = null;
         let exchangeChartInstance = null;
         let strategyChartInstance = null;
         let emotionChartInstance = null;
 
-        window.onload = function() {
-            if (window.lucide) {
-                lucide.createIcons();
-            }
+        document.addEventListener('DOMContentLoaded', function() {
             loadState();
             updateLanguageUI();
             switchTab('dashboard');
             initDragAndDrop();
-        };
+        });
 
-        // State Persistence
+        // State Persistence Per User ID
         function loadState() {
-            const localTrades = localStorage.getItem('ts_csv_trades_data');
             const savedLang = localStorage.getItem('ts_lang');
-
             if (savedLang) {
                 currentLang = savedLang;
                 document.getElementById('lang-select').value = currentLang;
             }
 
-            if (tg?.CloudStorage) {
-                tg.CloudStorage.getItem('ts_csv_trades_data', (err, value) => {
-                    if (!err && value) {
-                        try { trades = JSON.parse(value); } catch(e) {}
-                    } else if (localTrades) {
-                        try { trades = JSON.parse(localTrades); } catch(e) {}
-                    } else {
-                        trades = defaultSampleTrades;
-                    }
-                    updateDashboard();
-                    renderTradeLog();
-                });
-            } else if (localTrades) {
-                try { trades = JSON.parse(localTrades); } catch(e) { trades = defaultSampleTrades; }
+            const localTrades = localStorage.getItem(userIdKey);
+            if (localTrades) {
+                try { trades = JSON.parse(localTrades); } catch(e) { trades = []; }
             } else {
-                trades = defaultSampleTrades;
+                trades = []; // Clean state for new user
             }
+
+            updateDashboard();
+            renderTradeLog();
         }
 
         function saveTradesState() {
             const dataStr = JSON.stringify(trades);
-            localStorage.setItem('ts_csv_trades_data', dataStr);
+            localStorage.setItem(userIdKey, dataStr);
             if (tg?.CloudStorage) {
-                tg.CloudStorage.setItem('ts_csv_trades_data', dataStr);
+                tg.CloudStorage.setItem(userIdKey, dataStr);
             }
         }
 
@@ -882,11 +911,11 @@
             if (files.length > 0) processCSVFile(files[0]);
         }
 
-        // Universal CSV Parser Logic
+        // Universal CSV Parser Logic (Robust Line & Delimiter Parsing)
         function processCSVFile(file) {
             triggerHaptic('medium');
             const statusEl = document.getElementById('import-status');
-            statusEl.classList.remove('hidden', 'bg-rose-500/10', 'border-rose-500/30', 'text-rose-400', 'bg-emerald-500/10', 'border-emerald-500/30', 'text-emerald-400');
+            statusEl.classList.remove('hidden');
             statusEl.innerText = 'Парсинг файлу...';
             statusEl.className = 'p-3 rounded-xl text-xs border bg-cardBg border-slate-700 text-slate-300';
 
@@ -897,12 +926,12 @@
                     const parsedTrades = parseCSVByPreset(text, selectedPreset);
 
                     if (parsedTrades.length === 0) {
-                        throw new Error('Не вдалося розпарсити угоди. Перевірте формат файлу та вибрану біжу.');
+                        throw new Error('Не вдалося знайти угод у файлі. Перевірте вибір біржі та формат .csv');
                     }
 
                     let importedCount = 0;
                     parsedTrades.forEach(pt => {
-                        const exists = trades.some(t => t.symbol === pt.symbol && t.date === pt.date && Math.abs(t.pnl - pt.pnl) < 0.01);
+                        const exists = trades.some(t => t.symbol === pt.symbol && Math.abs(t.pnl - pt.pnl) < 0.001 && t.date === pt.date);
                         if (!exists) {
                             trades.unshift(pt);
                             importedCount++;
@@ -916,8 +945,11 @@
                     statusEl.innerText = `Успішно імпортовано ${importedCount} нових угод!`;
                     triggerHaptic('success');
 
-                    updateDashboard();
-                    renderTradeLog();
+                    // Automatically switch to trades log to see imported items
+                    setTimeout(() => {
+                        switchTab('trades');
+                    }, 800);
+
                 } catch (err) {
                     statusEl.className = 'p-3 rounded-xl text-xs border bg-rose-500/10 border-rose-500/30 text-rose-400 font-bold';
                     statusEl.innerText = err.message || 'Помилка читання файлу.';
@@ -931,38 +963,66 @@
             const lines = csvText.split(/\r\n|\n/).filter(line => line.trim().length > 0);
             if (lines.length < 2) return [];
 
-            const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, '').toLowerCase());
+            // Detect delimiter (comma or semicolon or tab)
+            const firstLine = lines[0];
+            let delimiter = ',';
+            if (firstLine.includes(';') && !firstLine.includes(',')) delimiter = ';';
+            if (firstLine.includes('\t')) delimiter = '\t';
+
+            const parseRow = (line) => {
+                const regex = new RegExp(`(?:^|${delimiter})(?:"([^"]*)"|([^"${delimiter}]*))`, 'g');
+                const row = [];
+                let match;
+                while ((match = regex.exec(line)) !== null) {
+                    let val = match[1] !== undefined ? match[1] : match[2];
+                    row.push((val || '').trim());
+                }
+                return row;
+            };
+
+            const headers = parseRow(lines[0]).map(h => h.toLowerCase().replace(/["']/g, ''));
             const parsed = [];
 
             for (let i = 1; i < lines.length; i++) {
-                const row = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || lines[i].split(',');
-                if (!row || row.length < 3) continue;
+                const row = parseRow(lines[i]);
+                if (row.length < 2) continue;
 
-                const getVal = (possibleHeaders) => {
-                    for (let ph of possibleHeaders) {
-                        const idx = headers.findIndex(h => h.includes(ph));
-                        if (idx !== -1 && row[idx]) {
-                            return row[idx].replace(/^"|"$/g, '').trim();
+                const getVal = (keywords) => {
+                    for (let kw of keywords) {
+                        const idx = headers.findIndex(h => h.includes(kw));
+                        if (idx !== -1 && row[idx] !== undefined) {
+                            return row[idx].replace(/["']/g, '').trim();
                         }
                     }
                     return '';
                 };
 
-                let symbol = getVal(['symbol', 'pair', 'contracts', 'market']) || 'BTCUSDT';
-                symbol = symbol.replace(/[-_]/g, '').toUpperCase();
-                if (!symbol.includes('/')) {
-                    symbol = symbol.replace('USDT', '/USDT');
+                let rawSymbol = getVal(['symbol', 'pair', 'contracts', 'market', 'instrument']) || 'BTCUSDT';
+                let symbol = rawSymbol.toUpperCase().replace(/[-_]/g, '');
+                if (symbol && !symbol.includes('/')) {
+                    if (symbol.endsWith('USDT')) symbol = symbol.replace('USDT', '/USDT');
+                    else if (symbol.endsWith('USDC')) symbol = symbol.replace('USDC', '/USDC');
                 }
 
-                let side = getVal(['side', 'direction', 'type', 'action']).toUpperCase();
-                let direction = (side.includes('BUY') || side.includes('LONG')) ? 'LONG' : 'SHORT';
+                let side = getVal(['side', 'direction', 'type', 'action', 'position']).toUpperCase();
+                let direction = (side.includes('BUY') || side.includes('LONG') || side.includes('OPEN LONG')) ? 'LONG' : 'SHORT';
 
-                let pnl = parseFloat(getVal(['closed pnl', 'realized pnl', 'pnl', 'profit'])) || 0;
-                let entry = parseFloat(getVal(['entry price', 'avg open price', 'entry'])) || 0;
-                let exit = parseFloat(getVal(['exit price', 'avg close price', 'close price', 'price'])) || 0;
-                let size = parseFloat(getVal(['qty', 'exec qty', 'amount', 'size'])) || 1;
-                let leverage = parseInt(getVal(['leverage'])) || 10;
-                let dateRaw = getVal(['created time', 'trade time', 'time', 'date']) || new Date().toISOString();
+                let rawPnl = getVal(['closed pnl', 'realized pnl', 'pnl', 'profit', 'realized profit', 'p&l']).replace(/,/g, '');
+                let pnl = parseFloat(rawPnl) || 0;
+
+                let rawEntry = getVal(['entry price', 'avg open price', 'entry', 'open price']).replace(/,/g, '');
+                let entry = parseFloat(rawEntry) || 0;
+
+                let rawExit = getVal(['exit price', 'avg close price', 'close price', 'price', 'close']).replace(/,/g, '');
+                let exit = parseFloat(rawExit) || 0;
+
+                let rawSize = getVal(['qty', 'exec qty', 'amount', 'size', 'closed size', 'vol']).replace(/,/g, '');
+                let size = Math.abs(parseFloat(rawSize)) || 1;
+
+                let rawLev = getVal(['leverage', 'lev']).replace(/[^0-9]/g, '');
+                let leverage = parseInt(rawLev) || 10;
+
+                let dateRaw = getVal(['created time', 'trade time', 'time', 'date', 'closed time', 'fill time']) || new Date().toISOString();
 
                 let formattedDate;
                 try {
@@ -971,20 +1031,24 @@
                     formattedDate = new Date().toISOString().slice(0, 16);
                 }
 
+                if (!entry && exit && pnl) {
+                    entry = direction === 'LONG' ? exit - (pnl/size) : exit + (pnl/size);
+                }
+
                 parsed.push({
-                    id: 'csv_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-                    symbol: symbol,
+                    id: 'csv_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                    symbol: symbol || 'BTC/USDT',
                     direction: direction,
                     exchange: preset.toUpperCase(),
                     leverage: leverage,
-                    entry: entry || (exit ? (direction === 'LONG' ? exit - (pnl/size) : exit + (pnl/size)) : 100),
-                    exit: exit || 100,
+                    entry: Math.abs(entry) || 100,
+                    exit: Math.abs(exit) || 100,
                     size: size,
                     pnl: pnl,
                     strategy: 'CSV Import',
                     emotion: 'Disciplined',
                     date: formattedDate,
-                    notes: `Auto parsed from ${preset.toUpperCase()} CSV.`
+                    notes: `Імпортовано з ${preset.toUpperCase()} CSV.`
                 });
             }
 
@@ -1267,7 +1331,7 @@
             const recent = trades.slice(0, 3);
 
             if (recent.length === 0) {
-                container.innerHTML = `<div class="text-center py-6 text-xs text-slate-500 bg-cardBg rounded-xl border border-slate-800">Немає угод.</div>`;
+                container.innerHTML = `<div class="text-center py-6 text-xs text-slate-500 bg-cardBg rounded-xl border border-slate-800">Немає угод. Додайте ручно або завантажте CSV.</div>`;
                 return;
             }
 
@@ -1346,7 +1410,7 @@
         // Charts Engine
         function renderEquityChart() {
             const chartCanvas = document.getElementById('equityChart');
-            if (!chartCanvas) return;
+            if (!chartCanvas || typeof Chart === 'undefined') return;
             const ctx = chartCanvas.getContext('2d');
             const sorted = [...trades].sort((a,b) => new Date(a.date) - new Date(b.date));
 
@@ -1394,6 +1458,8 @@
         }
 
         function renderAnalyticsCharts() {
+            if (typeof Chart === 'undefined') return;
+            
             // Exchange PnL Chart
             const exCtx = document.getElementById('exchangeChart')?.getContext('2d');
             if (exCtx) {
@@ -1408,9 +1474,9 @@
                 exchangeChartInstance = new Chart(exCtx, {
                     type: 'bar',
                     data: {
-                        labels: Object.keys(exData),
+                        labels: Object.keys(exData).length ? Object.keys(exData) : ['N/A'],
                         datasets: [{
-                            data: Object.values(exData),
+                            data: Object.values(exData).length ? Object.values(exData) : [0],
                             backgroundColor: '#ADFF2F',
                             borderRadius: 6
                         }]
@@ -1444,9 +1510,9 @@
                 strategyChartInstance = new Chart(stratCtx, {
                     type: 'bar',
                     data: {
-                        labels: stratLabels,
+                        labels: stratLabels.length ? stratLabels : ['N/A'],
                         datasets: [{
-                            data: stratWR,
+                            data: stratWR.length ? stratWR : [0],
                             backgroundColor: '#38bdf8',
                             borderRadius: 6
                         }]
@@ -1480,10 +1546,10 @@
                 emotionChartInstance = new Chart(emoCtx, {
                     type: 'bar',
                     data: {
-                        labels: emoLabels,
+                        labels: emoLabels.length ? emoLabels : ['N/A'],
                         datasets: [{
-                            data: emoVals,
-                            backgroundColor: emoColors,
+                            data: emoVals.length ? emoVals : [0],
+                            backgroundColor: emoColors.length ? emoColors : ['#10b981'],
                             borderRadius: 6
                         }]
                     },
