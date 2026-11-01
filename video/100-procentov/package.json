@@ -1,0 +1,44 @@
+{
+  "name": "stickman-video",
+  "version": "1.0.0",
+  "description": "3D stickman videos drawn with code: Remotion + Three.js + Whisper",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "studio": "remotion studio",
+    "transcribe": "node scripts/transcribe.mts",
+    "validate": "node scripts/validate.mjs",
+    "preview": "node scripts/preview.mjs",
+    "test-render": "node scripts/render.mjs --test",
+    "render": "node scripts/render.mjs",
+    "sfx": "node scripts/make-sfx.mjs",
+    "music": "node scripts/make-music.mjs"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "4.2.0",
+    "@mediabunny/server": "1.61.3",
+    "@react-three/fiber": "9.8.2",
+    "@remotion/cli": "4.0.535",
+    "@remotion/google-fonts": "4.0.535",
+    "@remotion/media": "4.0.535",
+    "@remotion/three": "4.0.535",
+    "@remotion/whisper-webgpu": "4.0.535",
+    "mediabunny": "1.61.3",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "remotion": "4.0.535",
+    "three": "0.186.1"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.7",
+    "@types/three": "0.186.0",
+    "typescript": "5.9.3"
+  },
+  "allowScripts": {
+    "esbuild": true,
+    "node-av": true,
+    "protobufjs": true,
+    "sharp": true,
+    "onnxruntime-node": true
+  }
+}
